@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, boolean, integer, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean, integer, decimal, date, foreignKey } from "drizzle-orm/pg-core";
 
 // Teams table (referenced by users)
 export const teams = pgTable("team", {
@@ -19,14 +19,19 @@ export const users = pgTable("user", {
   image: text("image"),
   role: varchar("role", { length: 50 }).notNull().default("vendedor"),
   level: integer("level").notNull().default(4),
-  managerId: uuid("managerId").references(() => users.id, { onDelete: "set null" }),
+  managerId: uuid("managerId"),
   teamId: uuid("teamId").references(() => teams.id, { onDelete: "set null" }),
   banned: boolean("banned").default(false),
   banReason: text("banReason"),
   banExpires: timestamp("banExpires"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
+}, (table) => ({
+  managerReference: foreignKey({
+    columns: [table.managerId],
+    foreignColumns: [table.id],
+  }).onDelete("set null"),
+}));
 
 export const sessions = pgTable("session", {
   id: uuid("id").primaryKey().defaultRandom(),
