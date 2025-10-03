@@ -1,4 +1,14 @@
-import { pgTable, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean, integer, decimal, date } from "drizzle-orm/pg-core";
+
+// Teams table (referenced by users)
+export const teams = pgTable("team", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  leaderId: uuid("leaderId"), // Will be set after users table is created
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
 
 // Better Auth tables
 export const users = pgTable("user", {
@@ -7,6 +17,10 @@ export const users = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("emailVerified").notNull().default(false),
   image: text("image"),
+  role: varchar("role", { length: 50 }).notNull().default("vendedor"),
+  level: integer("level").notNull().default(4), // 1=CEO, 2=Manager, 3=Senior, 4=Junior
+  managerId: uuid("managerId").references((): any => users.id, { onDelete: "set null" }),
+  teamId: uuid("teamId").references(() => teams.id, { onDelete: "set null" }),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -50,18 +64,56 @@ export const verifications = pgTable("verification", {
 });
 
 // CRM specific tables
+export const companies = pgTable("company", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: varchar("phone", { length: 50 }),
+  website: text("website"),
+  address: text("address"),
+  industry: varchar("industry", { length: 100 }),
+  employeeCount: integer("employeeCount"),
+  notes: text("notes"),
+  createdBy: uuid("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
 export const contacts = pgTable("contact", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  companyId: uuid("companyId").references(() => companies.id, { onDelete: "set null" }),
   name: text("name").notNull(),
   email: text("email"),
   phone: varchar("phone", { length: 50 }),
-  company: text("company"),
   position: text("position"),
   status: varchar("status", { length: 50 }).notNull().default("lead"),
   notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const dealStages = pgTable("dealStage", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  order: integer("order").notNull(),
+  color: varchar("color", { length: 20 }).notNull().default("#3b82f6"),
+  isDefault: boolean("isDefault").notNull().default(false),
+  isActive: boolean("isActive").notNull().default(true),
+  createdBy: uuid("createdBy").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const exchangeRates = pgTable("exchangeRate", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  date: date("date").notNull().defaultNow(),
+  usdToArs: decimal("usdToArs", { precision: 10, scale: 2 }).notNull(),
+  source: varchar("source", { length: 100 }).notNull().default("manual"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -72,12 +124,38 @@ export const deals = pgTable("deal", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   contactId: uuid("contactId").references(() => contacts.id, { onDelete: "set null" }),
+  companyId: uuid("companyId").references(() => companies.id, { onDelete: "set null" }),
   title: text("title").notNull(),
-  amount: text("amount"),
-  stage: varchar("stage", { length: 50 }).notNull().default("prospecting"),
-  probability: varchar("probability", { length: 10 }),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+  amountUsd: decimal("amountUsd", { precision: 12, scale: 2 }),
+  amountArs: decimal("amountArs", { precision: 12, scale: 2 }),
+  exchangeRateId: uuid("exchangeRateId").references(() => exchangeRates.id, { onDelete: "set null" }),
+  stageId: uuid("stageId")
+    .notNull()
+    .references(() => dealStages.id, { onDelete: "restrict" }),
+  probability: integer("probability").default(0),
   expectedCloseDate: timestamp("expectedCloseDate"),
+  closedAt: timestamp("closedAt"),
+  lostReason: text("lostReason"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export const dealHistory = pgTable("dealHistory", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  dealId: uuid("dealId")
+    .notNull()
+    .references(() => deals.id, { onDelete: "cascade" }),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  fromStageId: uuid("fromStageId").references(() => dealStages.id, { onDelete: "set null" }),
+  toStageId: uuid("toStageId").references(() => dealStages.id, { onDelete: "set null" }),
+  changeType: varchar("changeType", { length: 50 }).notNull(),
+  fieldName: varchar("fieldName", { length: 100 }),
+  oldValue: text("oldValue"),
+  newValue: text("newValue"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
