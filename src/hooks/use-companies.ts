@@ -3,6 +3,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Company } from "@/lib/types"
 
+interface CreateCompanyPayload {
+  name: string
+  industry?: string
+  website?: string
+  email?: string
+  phone?: string
+  address?: string
+  employeeCount?: number
+  notes?: string
+  createdBy?: string
+}
+
 export function useCompanies() {
   return useQuery({
     queryKey: ["companies"],
@@ -20,7 +32,7 @@ export function useCreateCompany() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: Omit<Company, "id" | "createdAt" | "updatedAt">) => {
+    mutationFn: async (data: CreateCompanyPayload) => {
       const response = await fetch("/api/companies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

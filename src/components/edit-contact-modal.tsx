@@ -19,10 +19,9 @@ interface EditContactModalProps {
 export function EditContactModal({ contact, onClose, onSuccess }: EditContactModalProps) {
   const [formData, setFormData] = useState({
     name: contact.name,
-    email: contact.email,
-    phone: contact.phone || "",
-    position: contact.position || "",
-    area: contact.area || "",
+    email: contact.email ?? "",
+    phone: contact.phone ?? "",
+    position: contact.position ?? "",
   })
 
   const updateContactMutation = useUpdateContact()
@@ -86,16 +85,6 @@ export function EditContactModal({ contact, onClose, onSuccess }: EditContactMod
               value={formData.position}
               onChange={(e) => setFormData((prev) => ({ ...prev, position: e.target.value }))}
               placeholder="Ej: Director de IT"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="area">Área / Departamento</Label>
-            <Input
-              id="area"
-              value={formData.area}
-              onChange={(e) => setFormData((prev) => ({ ...prev, area: e.target.value }))}
-              placeholder="Ej: Tecnología, Compras, Ventas"
             />
           </div>
 

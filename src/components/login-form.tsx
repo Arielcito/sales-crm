@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { AuthService } from "@/lib/auth"
 import type { User } from "@/lib/types"
+import { useUsers } from "@/hooks/use-users"
 
 interface LoginFormProps {
   onLogin: (user: User) => void
@@ -18,7 +18,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
   const [selectedEmail, setSelectedEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const demoUsers = AuthService.getAllUsers()
+  const { data: demoUsers = [] } = useUsers()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,10 +29,8 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const user = AuthService.login(selectedEmail)
-    if (user) {
-      onLogin(user)
-    }
+    const user = demoUsers.find((demoUser) => demoUser.email === selectedEmail)
+    if (user) onLogin(user as User)
 
     setIsLoading(false)
   }

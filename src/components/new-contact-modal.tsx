@@ -22,7 +22,6 @@ export function NewContactModal({ companyId, companyName, onClose, onSuccess }: 
     email: "",
     phone: "",
     position: "",
-    area: "",
   })
 
   const createContactMutation = useCreateContact()
@@ -33,7 +32,7 @@ export function NewContactModal({ companyId, companyName, onClose, onSuccess }: 
     try {
       await createContactMutation.mutateAsync({
         ...formData,
-        company_id: companyId,
+        companyId,
       })
       onSuccess()
     } catch (error) {
@@ -89,16 +88,6 @@ export function NewContactModal({ companyId, companyName, onClose, onSuccess }: 
               value={formData.position}
               onChange={(e) => setFormData((prev) => ({ ...prev, position: e.target.value }))}
               placeholder="Ej: Director de IT"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="area">Área / Departamento</Label>
-            <Input
-              id="area"
-              value={formData.area}
-              onChange={(e) => setFormData((prev) => ({ ...prev, area: e.target.value }))}
-              placeholder="Ej: Tecnología, Compras, Ventas"
             />
           </div>
 

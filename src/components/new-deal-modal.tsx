@@ -175,8 +175,7 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
                   ) : (
                     availableContacts.map((contact) => (
                       <SelectItem key={contact.id} value={contact.id}>
-                        {contact.name} {contact.area && `- ${contact.area}`}{" "}
-                        {contact.position && `(${contact.position})`}
+                        {contact.name} {contact.position && `(${contact.position})`}
                       </SelectItem>
                     ))
                   )}

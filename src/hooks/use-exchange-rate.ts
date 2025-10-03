@@ -20,19 +20,27 @@ export function useExchangeRate() {
 export function useConvertCurrency() {
   const { data: exchangeRate } = useExchangeRate()
 
-  return {
-    convertAmount: async (amount: number, fromCurrency: Currency, toCurrency: Currency): Promise<number> => {
-      if (fromCurrency === toCurrency) return amount
+  const rate = exchangeRate ? Number(exchangeRate.usdToArs) : null
 
-      if (fromCurrency === "USD" && toCurrency === "ARS" && exchangeRate) {
-        return amount * exchangeRate.usdToArs
+  return {
+    convertAmount: (amount: number, fromCurrency: Currency, toCurrency: Currency): number => {
+      if (fromCurrency === toCurrency) {
+        return amount
       }
 
-      if (fromCurrency === "ARS" && toCurrency === "USD" && exchangeRate) {
-        return amount / exchangeRate.usdToArs
+      if (!rate || Number.isNaN(rate)) {
+        return amount
+      }
+
+      if (fromCurrency === "USD" && toCurrency === "ARS") {
+        return amount * rate
+      }
+
+      if (fromCurrency === "ARS" && toCurrency === "USD" && rate !== 0) {
+        return amount / rate
       }
 
       return amount
-    }
+    },
   }
 }

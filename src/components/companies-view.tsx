@@ -91,7 +91,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   }
 
   const getCompanyContacts = (companyId: string) => {
-    return contacts.filter((contact) => contact.company_id === companyId)
+    return contacts.filter((contact) => contact.companyId === companyId)
   }
 
   if (companiesLoading || contactsLoading) {
@@ -206,10 +206,10 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
                             <p className="font-medium text-sm">{contact.name}</p>
                             <p className="text-xs text-muted-foreground">{contact.position}</p>
                           </div>
-                          {contact.area && (
+                          {contact.status && (
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-xs">
-                                {contact.area}
+                                {contact.status}
                               </Badge>
                             </div>
                           )}

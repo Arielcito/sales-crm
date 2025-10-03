@@ -1,6 +1,7 @@
 "use client"
 
 import { KanbanBoard } from "@/components/kanban-board"
+import { KanbanSkeleton } from "@/components/kanban-skeleton"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { useDealStages } from "@/hooks/use-deal-stages"
 import { useCompanies } from "@/hooks/use-companies"
@@ -17,11 +18,7 @@ export default function KanbanPage() {
   const isLoading = isLoadingUser || isLoadingStages || isLoadingCompanies || isLoadingContacts || isLoadingUsers
 
   if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Cargando...</div>
-      </div>
-    )
+    return <KanbanSkeleton />
   }
 
   if (!currentUser) {

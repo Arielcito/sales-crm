@@ -10,6 +10,7 @@ import type { Deal, User, Currency } from "@/lib/types"
 import { DealModal } from "./deal-modal"
 import { CurrencyToggle } from "./currency-toggle"
 import { NewDealModal } from "./new-deal-modal"
+import { KanbanSkeleton } from "./kanban-skeleton"
 import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
 
 interface KanbanBoardProps {
@@ -68,11 +69,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
   const orderedStages = [...stages].sort((a, b) => a.order - b.order)
 
   if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Cargando negocios...</div>
-      </div>
-    )
+    return <KanbanSkeleton />
   }
 
   return (

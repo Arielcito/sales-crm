@@ -22,8 +22,8 @@ export function NewUserModal({ isOpen, onClose, allUsers }: NewUserModalProps) {
     email: "",
     role: "",
     level: "4",
-    manager_id: "0", // Updated default value to be a non-empty string
-    team_id: "1",
+    managerId: "none",
+    teamId: "",
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,8 +39,8 @@ export function NewUserModal({ isOpen, onClose, allUsers }: NewUserModalProps) {
       email: "",
       role: "",
       level: "4",
-      manager_id: "0", // Updated default value to be a non-empty string
-      team_id: "1",
+      managerId: "none",
+      teamId: "",
     })
   }
 
@@ -104,14 +104,14 @@ export function NewUserModal({ isOpen, onClose, allUsers }: NewUserModalProps) {
           <div>
             <Label htmlFor="manager">Gerente</Label>
             <Select
-              value={formData.manager_id}
-              onValueChange={(value) => setFormData({ ...formData, manager_id: value })}
+              value={formData.managerId}
+              onValueChange={(value) => setFormData({ ...formData, managerId: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar gerente (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Sin gerente</SelectItem> {/* Updated value prop to be a non-empty string */}
+                <SelectItem value="none">Sin gerente</SelectItem>
                 {allUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name} - Nivel {user.level}
@@ -125,8 +125,8 @@ export function NewUserModal({ isOpen, onClose, allUsers }: NewUserModalProps) {
             <Label htmlFor="team">ID del Equipo</Label>
             <Input
               id="team"
-              value={formData.team_id}
-              onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
+              value={formData.teamId}
+              onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
               placeholder="1"
             />
           </div>

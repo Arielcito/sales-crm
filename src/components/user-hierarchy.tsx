@@ -7,23 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Plus, Pencil, Trash2, Shield } from "lucide-react"
-import { AuthService } from "@/lib/auth"
 import { NewUserModal } from "@/components/new-user-modal"
 import { EditUserModal } from "@/components/edit-user-modal"
 import type { User } from "@/lib/types"
+import { useUsers } from "@/hooks/use-users"
 
 interface UserHierarchyProps {
   currentUser: User
 }
 
-const LEVEL_COLORS = {
+const LEVEL_COLORS: Record<number, string> = {
   1: "bg-chart-1 text-chart-1-foreground",
   2: "bg-chart-2 text-chart-2-foreground",
   3: "bg-chart-3 text-chart-3-foreground",
   4: "bg-chart-4 text-chart-4-foreground",
 }
 
-const LEVEL_LABELS = {
+const LEVEL_LABELS: Record<number, string> = {
   1: "Ejecutivo",
   2: "Director",
   3: "Senior",
@@ -31,10 +31,10 @@ const LEVEL_LABELS = {
 }
 
 export function UserHierarchy({ currentUser }: UserHierarchyProps) {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false)
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false)
   const [userToEdit, setUserToEdit] = useState<User | null>(null)
+  const { data: allUsers = [], isLoading } = useUsers()
 
   if (currentUser.level !== 1) {
     return (
@@ -49,7 +49,9 @@ export function UserHierarchy({ currentUser }: UserHierarchyProps) {
     )
   }
 
-  const allUsers = AuthService.getAllUsers()
+  if (isLoading) {
+    return <div className="p-6 text-sm text-muted-foreground">Cargando usuarios...</div>
+  }
 
   const handleEditUser = (user: User) => {
     setUserToEdit(user)
@@ -71,7 +73,7 @@ export function UserHierarchy({ currentUser }: UserHierarchyProps) {
 
   const renderUserCard = (user: User) => {
     const isCurrentUser = user.id === currentUser.id
-    const directReports = allUsers.filter((u) => u.manager_id === user.id)
+    const directReports = allUsers.filter((u) => u.managerId === user.id)
 
     return (
       <Card key={user.id} className={`${isCurrentUser ? "ring-2 ring-primary" : ""}`}>
@@ -99,7 +101,7 @@ export function UserHierarchy({ currentUser }: UserHierarchyProps) {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Badge className={LEVEL_COLORS[user.level as keyof typeof LEVEL_COLORS]}>Nivel {user.level}</Badge>
+              <Badge className={LEVEL_COLORS[user.level]}>Nivel {user.level}</Badge>
 
               <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
                 <Pencil className="w-4 h-4" />
@@ -123,7 +125,7 @@ export function UserHierarchy({ currentUser }: UserHierarchyProps) {
               <div>
                 <span className="text-muted-foreground">Gerente:</span>
                 <span className="ml-2 font-medium">
-                  {user.manager_id ? allUsers.find((u) => u.id === user.manager_id)?.name || "Desconocido" : "Ninguno"}
+                  {user.managerId ? allUsers.find((u) => u.id === user.managerId)?.name || "Desconocido" : "Ninguno"}
                 </span>
               </div>
               <div>
@@ -132,11 +134,11 @@ export function UserHierarchy({ currentUser }: UserHierarchyProps) {
               </div>
               <div>
                 <span className="text-muted-foreground">Equipo:</span>
-                <span className="ml-2 font-medium">{user.team_id || "N/A"}</span>
+                <span className="ml-2 font-medium">{user.teamId || "N/A"}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Tipo:</span>
-                <span className="ml-2 font-medium">{LEVEL_LABELS[user.level as keyof typeof LEVEL_LABELS]}</span>
+                <span className="ml-2 font-medium">{LEVEL_LABELS[user.level]}</span>
               </div>
             </div>
           </div>

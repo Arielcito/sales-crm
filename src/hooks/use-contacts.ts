@@ -3,6 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Contact } from "@/lib/types"
 
+interface CreateContactPayload {
+  name: string
+  email?: string
+  phone?: string
+  position?: string
+  status?: string
+  notes?: string
+  companyId: string
+  userId?: string
+}
+
 export function useContacts() {
   return useQuery({
     queryKey: ["contacts"],
@@ -20,7 +31,7 @@ export function useCreateContact() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: Omit<Contact, "id" | "createdAt" | "updatedAt">) => {
+    mutationFn: async (data: CreateContactPayload) => {
       const response = await fetch("/api/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

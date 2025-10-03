@@ -23,8 +23,8 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
     email: user.email,
     role: user.role,
     level: user.level.toString(),
-    manager_id: user.manager_id || "0", // Updated default value to "0"
-    team_id: user.team_id || "1",
+    managerId: user.managerId ?? "",
+    teamId: user.teamId ?? "",
   })
 
   useEffect(() => {
@@ -33,8 +33,8 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
       email: user.email,
       role: user.role,
       level: user.level.toString(),
-      manager_id: user.manager_id || "0", // Updated default value to "0"
-      team_id: user.team_id || "1",
+      managerId: user.managerId ?? "",
+      teamId: user.teamId ?? "",
     })
   }, [user])
 
@@ -105,14 +105,14 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
           <div>
             <Label htmlFor="edit-manager">Gerente</Label>
             <Select
-              value={formData.manager_id}
-              onValueChange={(value) => setFormData({ ...formData, manager_id: value })}
+              value={formData.managerId || "none"}
+              onValueChange={(value) => setFormData({ ...formData, managerId: value === "none" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar gerente (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">Sin gerente</SelectItem> {/* Updated value to "0" */}
+                <SelectItem value="none">Sin gerente</SelectItem>
                 {allUsers
                   .filter((u) => u.id !== user.id)
                   .map((u) => (
@@ -128,8 +128,8 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
             <Label htmlFor="edit-team">ID del Equipo</Label>
             <Input
               id="edit-team"
-              value={formData.team_id}
-              onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
+              value={formData.teamId}
+              onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
             />
           </div>
 
