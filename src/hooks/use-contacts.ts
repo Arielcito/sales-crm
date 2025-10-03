@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Contact } from "@/lib/types"
+import { apiClient } from "@/lib/api/client"
 
 interface CreateContactPayload {
   name: string
@@ -18,10 +19,7 @@ export function useContacts() {
   return useQuery({
     queryKey: ["contacts"],
     queryFn: async () => {
-      const response = await fetch("/api/contacts")
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al obtener contactos")
-      return json.data as Contact[]
+      return await apiClient<Contact[]>("/api/contacts")
     },
     staleTime: 1000 * 60 * 5,
   })
@@ -32,14 +30,10 @@ export function useCreateContact() {
 
   return useMutation({
     mutationFn: async (data: CreateContactPayload) => {
-      const response = await fetch("/api/contacts", {
+      return await apiClient<Contact>("/api/contacts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al crear contacto")
-      return json.data as Contact
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
@@ -52,14 +46,10 @@ export function useUpdateContact() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Contact> }) => {
-      const response = await fetch(`/api/contacts/${id}`, {
+      return await apiClient<Contact>(`/api/contacts/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al actualizar contacto")
-      return json.data as Contact
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
@@ -72,12 +62,9 @@ export function useDeleteContact() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/contacts/${id}`, {
+      return await apiClient<void>(`/api/contacts/${id}`, {
         method: "DELETE",
       })
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al eliminar contacto")
-      return json.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })

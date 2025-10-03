@@ -39,39 +39,39 @@ export async function GET(request: NextRequest) {
     console.log("[API /dashboard/stats] Visible users:", visibleUserIds.length)
 
     const [contactsCount, dealsData, dealsByStageData] = await Promise.all([
-      db.select({ count: sql<number>`count(*)::int` })
+      db.select({ count: sql<number>`COALESCE(count(*), 0)::int` })
         .from(contacts)
-        .where(inArray(contacts.userId, visibleUserIds)),
+        .where(visibleUserIds.length > 0 ? inArray(contacts.userId, visibleUserIds) : sql`1=0`),
 
       db.select({
-        count: sql<number>`count(*)::int`,
-        totalUsd: sql<number>`sum(COALESCE(${deals.amountUsd}::numeric, 0))`,
-        totalArs: sql<number>`sum(COALESCE(${deals.amountArs}::numeric, 0))`,
+        count: sql<number>`COALESCE(count(*), 0)::int`,
+        totalUsd: sql<number>`COALESCE(sum(COALESCE(${deals.amountUsd}::numeric, 0)), 0)`,
+        totalArs: sql<number>`COALESCE(sum(COALESCE(${deals.amountArs}::numeric, 0)), 0)`,
       })
         .from(deals)
-        .where(inArray(deals.userId, visibleUserIds)),
+        .where(visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`),
 
       db.select({
         stageId: deals.stageId,
-        count: sql<number>`count(*)::int`,
-        totalUsd: sql<number>`sum(COALESCE(${deals.amountUsd}::numeric, 0))`,
+        count: sql<number>`COALESCE(count(*), 0)::int`,
+        totalUsd: sql<number>`COALESCE(sum(COALESCE(${deals.amountUsd}::numeric, 0)), 0)`,
       })
         .from(deals)
-        .where(inArray(deals.userId, visibleUserIds))
+        .where(visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`)
         .groupBy(deals.stageId),
     ])
 
-    const totalContacts = contactsCount[0]?.count || 0
-    const totalDeals = dealsData[0]?.count || 0
-    const totalRevenueUsd = parseFloat(dealsData[0]?.totalUsd?.toString() || "0")
-    const totalRevenueArs = parseFloat(dealsData[0]?.totalArs?.toString() || "0")
+    const totalContacts = Number(contactsCount[0]?.count) || 0
+    const totalDeals = Number(dealsData[0]?.count) || 0
+    const totalRevenueUsd = Number(dealsData[0]?.totalUsd) || 0
+    const totalRevenueArs = Number(dealsData[0]?.totalArs) || 0
 
     const dealsByStage: Record<string, number> = {}
     const revenueByStage: Record<string, number> = {}
 
     dealsByStageData.forEach(stage => {
-      dealsByStage[stage.stageId] = stage.count
-      revenueByStage[stage.stageId] = parseFloat(stage.totalUsd?.toString() || "0")
+      dealsByStage[stage.stageId] = Number(stage.count) || 0
+      revenueByStage[stage.stageId] = Number(stage.totalUsd) || 0
     })
 
     console.log("[API /dashboard/stats] Stats calculated - Contacts:", totalContacts, "Deals:", totalDeals)

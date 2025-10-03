@@ -1,17 +1,14 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { getCurrentExchangeRate, convertCurrency } from "@/lib/services/exchange-rate.service"
+import { apiClient } from "@/lib/api/client"
 import type { Currency } from "@/lib/types"
 
 export function useExchangeRate() {
   return useQuery({
     queryKey: ["exchange-rate"],
     queryFn: async () => {
-      const response = await fetch("/api/exchange-rate")
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al obtener tipo de cambio")
-      return json.data
+      return await apiClient<{ usdToArs: string }>("/api/exchange-rate")
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
   })

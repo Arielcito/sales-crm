@@ -2,15 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query"
 import type { DealStage } from "@/lib/types"
+import { apiClient } from "@/lib/api/client"
 
 export function useDealStages() {
   return useQuery({
     queryKey: ["deal-stages"],
     queryFn: async () => {
-      const response = await fetch("/api/deal-stages")
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al obtener etapas")
-      return json.data as DealStage[]
+      return await apiClient<DealStage[]>("/api/deal-stages")
     },
     staleTime: 1000 * 60 * 5,
   })

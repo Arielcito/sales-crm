@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "Better Auth": {
+    "url": "https://mcp.chonkie.ai/better-auth/better-auth-builder/mcp"
+  },"supabase": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@supabase/mcp-server-supabase",
+          "--read-only",
+          "--project-ref=wmbnmrpqjspuxocghkwl"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "sbp_fbc7630d1b44fde7238331e92c9cce757491b32f"
+        }
+    }
+  }
+}

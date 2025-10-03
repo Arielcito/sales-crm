@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { apiClient } from "@/lib/api/client"
 
 export interface DashboardStats {
   totalContacts: number
@@ -15,10 +16,7 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard", "stats"],
     queryFn: async () => {
-      const response = await fetch("/api/dashboard/stats")
-      const json = await response.json()
-      if (!json.success) throw new Error(json.error?.message || "Error al obtener estadísticas")
-      return json.data as DashboardStats
+      return await apiClient<DashboardStats>("/api/dashboard/stats")
     },
     staleTime: 1000 * 60 * 2,
   })

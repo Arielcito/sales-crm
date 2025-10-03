@@ -12,7 +12,7 @@ interface CurrencyToggleProps {
 
 export function CurrencyToggle({ currency, onCurrencyChange }: CurrencyToggleProps) {
   const { data: exchangeRateData } = useExchangeRate()
-  const exchangeRate = exchangeRateData?.venta || 0
+  const exchangeRate = exchangeRateData ? Number(exchangeRateData.usdToArs) : 0
 
   return (
     <div className="flex items-center space-x-2">
