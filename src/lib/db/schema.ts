@@ -18,9 +18,12 @@ export const users = pgTable("user", {
   emailVerified: boolean("emailVerified").notNull().default(false),
   image: text("image"),
   role: varchar("role", { length: 50 }).notNull().default("vendedor"),
-  level: integer("level").notNull().default(4), // 1=CEO, 2=Manager, 3=Senior, 4=Junior
+  level: integer("level").notNull().default(4),
   managerId: uuid("managerId").references((): any => users.id, { onDelete: "set null" }),
   teamId: uuid("teamId").references(() => teams.id, { onDelete: "set null" }),
+  banned: boolean("banned").default(false),
+  banReason: text("banReason"),
+  banExpires: timestamp("banExpires"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -34,6 +37,7 @@ export const sessions = pgTable("session", {
   token: text("token").notNull().unique(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
+  impersonatedBy: text("impersonatedBy"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });

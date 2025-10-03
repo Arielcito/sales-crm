@@ -39,6 +39,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -52,11 +56,48 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        stage: {
+          initial: {
+            DEFAULT: "hsl(var(--stage-initial))",
+            foreground: "hsl(var(--stage-initial-foreground))",
+          },
+          early: {
+            DEFAULT: "hsl(var(--stage-early))",
+            foreground: "hsl(var(--stage-early-foreground))",
+          },
+          middle: {
+            DEFAULT: "hsl(var(--stage-middle))",
+            foreground: "hsl(var(--stage-middle-foreground))",
+          },
+          progress: {
+            DEFAULT: "hsl(var(--stage-progress))",
+            foreground: "hsl(var(--stage-progress-foreground))",
+          },
+          success: {
+            DEFAULT: "hsl(var(--stage-success))",
+            foreground: "hsl(var(--stage-success-foreground))",
+          },
+          lost: {
+            DEFAULT: "hsl(var(--stage-lost))",
+            foreground: "hsl(var(--stage-lost-foreground))",
+          },
+        },
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"],
       },
     },
   },

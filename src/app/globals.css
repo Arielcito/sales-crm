@@ -1,84 +1,172 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
-  --radius: 0.5rem;
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
+  /* Nexus-inspired color palette with dark sidebar and light content */
+  /* Base colors - very light backgrounds inspired by Nexus */
+  --background: #f8f9fb;
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
-}
+  /* Primary colors - blue accent from Nexus */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
 
-* {
-  border-color: hsl(var(--border));
-}
+  /* Secondary colors - soft neutrals */
+  --secondary: #f1f5f9;
+  --secondary-foreground: #64748b;
 
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Muted colors for subtle elements */
+  --muted: #f8fafc;
+  --muted-foreground: #94a3b8;
+
+  /* Action colors - green for success actions */
+  --accent: #10b981;
+  --accent-foreground: #ffffff;
+
+  /* Alert colors */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+
+  /* Border and input colors - very subtle */
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --ring: #3b82f6;
+
+  /* Pipeline stage colors - progressive system */
+  --stage-initial: #f1f5f9;
+  --stage-initial-foreground: #64748b;
+  --stage-early: #dbeafe;
+  --stage-early-foreground: #1e40af;
+  --stage-middle: #fef3c7;
+  --stage-middle-foreground: #92400e;
+  --stage-progress: #d1fae5;
+  --stage-progress-foreground: #065f46;
+  --stage-success: #10b981;
+  --stage-success-foreground: #ffffff;
+  --stage-lost: #fee2e2;
+  --stage-lost-foreground: #991b1b;
+
+  /* Chart colors */
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+
+  --radius: 0.75rem;
+
+  /* Dark sidebar colors inspired by Nexus design */
+  --sidebar: #1e293b;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: #334155;
+  --sidebar-ring: #3b82f6;
 }
 
 .dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #60a5fa;
+  --primary-foreground: #0f172a;
+  --secondary: #334155;
+  --secondary-foreground: #cbd5e1;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #34d399;
+  --accent-foreground: #0f172a;
+  --destructive: #f87171;
+  --destructive-foreground: #0f172a;
+  --warning: #fbbf24;
+  --warning-foreground: #0f172a;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #60a5fa;
+
+  --stage-initial: #334155;
+  --stage-initial-foreground: #cbd5e1;
+  --stage-early: #1e3a8a;
+  --stage-early-foreground: #dbeafe;
+  --stage-middle: #92400e;
+  --stage-middle-foreground: #fef3c7;
+  --stage-progress: #065f46;
+  --stage-progress-foreground: #d1fae5;
+  --stage-success: #059669;
+  --stage-success-foreground: #ffffff;
+  --stage-lost: #991b1b;
+  --stage-lost-foreground: #fee2e2;
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #60a5fa;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #cbd5e1;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #60a5fa;
 }
 
 @theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-stage-initial: var(--stage-initial);
+  --color-stage-initial-foreground: var(--stage-initial-foreground);
+  --color-stage-early: var(--stage-early);
+  --color-stage-early-foreground: var(--stage-early-foreground);
+  --color-stage-middle: var(--stage-middle);
+  --color-stage-middle-foreground: var(--stage-middle-foreground);
+  --color-stage-progress: var(--stage-progress);
+  --color-stage-progress-foreground: var(--stage-progress-foreground);
+  --color-stage-success: var(--stage-success);
+  --color-stage-success-foreground: var(--stage-success-foreground);
+  --color-stage-lost: var(--stage-lost);
+  --color-stage-lost-foreground: var(--stage-lost-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -91,10 +179,56 @@ body {
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border outline-ring/50;
   }
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground font-sans antialiased;
+    /* Smooth transitions for better UX */
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+}
+
+@layer utilities {
+  .stage-initial {
+    @apply bg-stage-initial text-stage-initial-foreground;
+  }
+  .stage-early {
+    @apply bg-stage-early text-stage-early-foreground;
+  }
+  .stage-middle {
+    @apply bg-stage-middle text-stage-middle-foreground;
+  }
+  .stage-progress {
+    @apply bg-stage-progress text-stage-progress-foreground;
+  }
+  .stage-success {
+    @apply bg-stage-success text-stage-success-foreground;
+  }
+  .stage-lost {
+    @apply bg-stage-lost text-stage-lost-foreground;
+  }
+}
+
+/* Enhanced component styles inspired by Nexus */
+@layer components {
+  .card-hover {
+    @apply transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .button-primary {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-colors duration-200 shadow-sm;
+  }
+
+  .stage-indicator {
+    @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium transition-colors duration-200;
+  }
+
+  /* Nexus-style subtle shadows */
+  .nexus-card {
+    @apply bg-card border border-border/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .nexus-sidebar {
+    @apply bg-sidebar text-sidebar-foreground border-r border-sidebar-border;
   }
 }

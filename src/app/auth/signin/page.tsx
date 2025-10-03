@@ -36,17 +36,17 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-md shadow-lg border-border">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-2xl text-foreground font-semibold">Sign In</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Enter your credentials to access your CRM account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </label>
               <Input
@@ -55,11 +55,12 @@ export default function SignInPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring"
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+              <label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
               </label>
               <Input
@@ -68,19 +69,26 @@ export default function SignInPage() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring"
                 required
               />
             </div>
             {error && (
-              <div className="text-sm text-destructive">{error}</div>
+              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
+                {error}
+              </div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-muted-foreground border-t border-border pt-4">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" className="text-primary hover:underline">
+            <Link href="/auth/signup" className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium">
               Sign up
             </Link>
           </div>

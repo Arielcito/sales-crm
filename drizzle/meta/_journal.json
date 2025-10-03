@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1759450935964,
+      "tag": "0000_unique_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759452152925,
+      "tag": "0001_heavy_celestials",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759452711622,
+      "tag": "0002_chief_diamondback",
+      "breakpoints": true
+    }
+  ]
+}
