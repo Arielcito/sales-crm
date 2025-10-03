@@ -1,38 +1,28 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CompaniesView } from "@/components/companies-view"
+import { CompaniesSkeleton } from "@/components/companies-skeleton"
+import { useCurrentUser } from "@/hooks/use-current-user"
 
 export default function CompaniesPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold mb-2">Empresas y Contactos</h2>
-        <p className="text-muted-foreground">
-          Gestiona tus empresas y contactos comerciales
-        </p>
-      </div>
+  const { data: currentUser, isLoading, error } = useCurrentUser()
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Empresas</CardTitle>
-            <CardDescription>Lista de empresas registradas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">No hay empresas registradas todavía</p>
-          </CardContent>
-        </Card>
+  if (isLoading) {
+    return <CompaniesSkeleton />
+  }
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Contactos</CardTitle>
-            <CardDescription>Lista de contactos registrados</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">No hay contactos registrados todavía</p>
-          </CardContent>
-        </Card>
+  if (error || !currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive">Error al cargar las empresas</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {error?.message || "Usuario no encontrado"}
+          </p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return <CompaniesView currentUser={currentUser} />
 }

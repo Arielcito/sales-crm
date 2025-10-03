@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { getDeals, getDealById, createDeal, updateDeal, deleteDeal } from "@/lib/api/deals"
 import type { CreateDealInput, UpdateDealInput } from "@/lib/schemas/deal"
 import type { Deal } from "@/lib/types"
@@ -60,6 +61,9 @@ export function useUpdateDeal() {
     },
     onError: (err, { id }, context) => {
       console.error("[useUpdateDeal] Error updating deal:", err)
+      toast.error("Error al actualizar el negocio", {
+        description: "No se pudo guardar los cambios. Por favor, intenta nuevamente."
+      })
       if (context?.previousDeals) {
         queryClient.setQueryData(["deals"], context.previousDeals)
       }

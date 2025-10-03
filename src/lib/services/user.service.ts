@@ -1,8 +1,8 @@
+import { eq } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
-import type { User } from "@/lib/types"
 import type { UpdateUserInput } from "@/lib/schemas/user"
+import type { User } from "@/lib/types"
 
 export async function getAllUsers(): Promise<User[]> {
   console.log("[user.service] Fetching all users")
@@ -128,7 +128,7 @@ export async function getManagerChain(userId: string): Promise<User[]> {
 export async function updateUser(id: string, data: UpdateUserInput): Promise<User | null> {
   console.log("[user.service] Updating user:", id)
 
-  const updateData: any = { updatedAt: new Date() }
+  const updateData: Record<string, unknown> = { updatedAt: new Date() }
 
   if (data.name !== undefined) updateData.name = data.name
   if (data.email !== undefined) updateData.email = data.email
@@ -159,6 +159,20 @@ export async function updateUser(id: string, data: UpdateUserInput): Promise<Use
     teamId: user.teamId || undefined,
     image: user.image || undefined,
   }
+}
+
+export async function deleteUser(id: string): Promise<boolean> {
+  console.log("[user.service] Deleting user:", id)
+
+  const result = await db.update(users).set({ banned: true, updatedAt: new Date() }).where(eq(users.id, id)).returning()
+
+  if (result.length === 0) {
+    console.log("[user.service] User not found for deletion")
+    return false
+  }
+
+  console.log("[user.service] User deleted:", id)
+  return true
 }
 
 

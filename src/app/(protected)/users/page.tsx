@@ -1,28 +1,33 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { UsersView } from "@/components/users-view"
+import { useCurrentUser } from "@/hooks/use-current-user"
 
 export default function UsersPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold mb-2">Gestión de Usuarios</h2>
-        <p className="text-muted-foreground">
-          Administra los usuarios del sistema (Solo para nivel 1)
-        </p>
-      </div>
+  const { data: currentUser, isLoading, error } = useCurrentUser()
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuarios del Sistema</CardTitle>
-          <CardDescription>Lista de usuarios registrados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Funcionalidad de gestión de usuarios próximamente disponible
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Cargando usuarios...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive">Error al cargar los usuarios</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {error?.message || "Usuario no encontrado"}
           </p>
-        </CardContent>
-      </Card>
-    </div>
-  )
+        </div>
+      </div>
+    )
+  }
+
+  return <UsersView currentUser={currentUser} />
 }

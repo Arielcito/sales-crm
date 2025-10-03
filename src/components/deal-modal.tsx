@@ -41,26 +41,28 @@ export function DealModal({ deal, currentUser, currency, onClose, onUpdate }: De
   const responsibleUser = users.find((user) => user.id === deal.userId)
   const currentStage = stages.find((s) => s.id === deal.stageId)
 
-  const handleSave = async () => {
-    try {
-      console.log("[DealModal] Saving deal:", deal.id)
-      await updateDealMutation.mutateAsync({
-        id: deal.id,
-        data: {
-          title: formData.title,
-          currency: formData.currency as Currency,
-          amountUsd: formData.currency === "USD" ? (formData.amountUsd ?? undefined) : undefined,
-          amountArs: formData.currency === "ARS" ? (formData.amountArs ?? undefined) : undefined,
-          stageId: formData.stageId,
-          expectedCloseDate: formData.expectedCloseDate ?? undefined,
-        }
-      })
-      console.log("[DealModal] Deal saved successfully")
-      onUpdate()
-      setIsEditing(false)
-    } catch (error) {
-      console.error("[DealModal] Error updating deal:", error)
-    }
+  const handleSave = () => {
+    console.log("[DealModal] Saving deal:", deal.id)
+    setIsEditing(false)
+    updateDealMutation.mutate({
+      id: deal.id,
+      data: {
+        title: formData.title,
+        currency: formData.currency as Currency,
+        amountUsd: formData.currency === "USD" ? (formData.amountUsd ?? undefined) : undefined,
+        amountArs: formData.currency === "ARS" ? (formData.amountArs ?? undefined) : undefined,
+        stageId: formData.stageId,
+        expectedCloseDate: formData.expectedCloseDate ?? undefined,
+      }
+    }, {
+      onSuccess: () => {
+        console.log("[DealModal] Deal saved successfully")
+        onUpdate()
+      },
+      onError: () => {
+        setIsEditing(true)
+      }
+    })
   }
 
   return (
