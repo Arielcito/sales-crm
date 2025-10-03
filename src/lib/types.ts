@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react"
+
 export interface User {
   id: string;
   name: string;
@@ -109,6 +111,6 @@ export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "currenc
 export interface NavigationItem {
   id: ViewType;
   label: string;
-  icon: any; // lucide-react icon component
+  icon: LucideIcon;
   levelRequired?: number;
 }

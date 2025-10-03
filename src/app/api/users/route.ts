@@ -4,8 +4,9 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
 import { createUserSchema } from "@/lib/schemas/user"
-import { getAllUsers } from "@/lib/services/user.service"
+import { getAllUsers, getUserById } from "@/lib/services/user.service"
 import { canManageUser } from "@/lib/utils"
+import { ZodError } from "zod"
 
 export async function GET() {
   try {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const [currentUser] = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1)
+    const currentUser = await getUserById(session.user.id)
     if (!currentUser) {
       return NextResponse.json(
         { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createUserSchema.parse(body)
 
-    if (!canManageUser({ ...currentUser, managerId: currentUser.managerId || undefined, teamId: currentUser.teamId || undefined, image: currentUser.image || undefined }, validatedData.level)) {
+    if (!canManageUser(currentUser, validatedData.level)) {
       return NextResponse.json(
         { success: false, error: { code: "FORBIDDEN", message: "No tienes permisos para crear usuarios de este nivel" } },
         { status: 403 }
@@ -106,12 +107,12 @@ export async function POST(request: NextRequest) {
         image: updatedUser.image,
       }
     }, { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API /users] Error:", error)
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos", details: error.errors } },
+        { success: false, error: { code: "VALIDATION_ERROR", message: "Datos inválidos", details: error.issues } },
         { status: 400 }
       )
     }

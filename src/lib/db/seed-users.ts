@@ -5,6 +5,10 @@ import { db } from "./index";
 import * as schema from "./schema";
 import { seedCompanies, seedContacts, seedDeals } from "./seed";
 
+type DbUser = typeof schema.users.$inferSelect;
+type DbCompany = typeof schema.companies.$inferSelect;
+type DbContact = typeof schema.contacts.$inferSelect;
+
 const USERS_DATA = [
   // Nivel 1 - CEO
   {
@@ -85,7 +89,7 @@ interface CreateUserData {
   teamId: string | null;
 }
 
-async function createUser(userData: CreateUserData) {
+async function createUser(userData: CreateUserData): Promise<DbUser> {
   try {
     await auth.api.createUser({
       body: {
@@ -153,7 +157,7 @@ export async function seedUsers() {
     console.log(`   - Comercial: ${comercialTeam.id}\n`);
 
     // Crear usuarios y guardar referencias
-    const createdUsers: Record<string, any> = {};
+    const createdUsers: Record<string, DbUser> = {};
 
     // 1. Crear CEO (Lucas Palazzo)
     console.log("1️⃣  Creating CEO...");
@@ -254,7 +258,7 @@ export async function seedUsers() {
         createdUsers.maria.id,
       ];
 
-      const companyIdsArray = companies.map((c: any) => c.id);
+      const companyIdsArray = companies.map((company: DbCompany) => company.id);
 
       const contacts = await seedContacts(userIdsArray, companyIdsArray);
 
@@ -268,7 +272,7 @@ export async function seedUsers() {
           .orderBy(schema.exchangeRates.createdAt)
           .limit(1);
 
-        const contactIdsArray = contacts.map((c: any) => c.id);
+        const contactIdsArray = contacts.map((contact: DbContact) => contact.id);
 
         await seedDeals(
           userIdsArray,

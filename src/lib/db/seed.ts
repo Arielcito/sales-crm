@@ -2,6 +2,9 @@ import "dotenv/config";
 import { db } from "./index";
 import * as schema from "./schema";
 
+type CompanyRecord = typeof schema.companies.$inferSelect;
+type ContactRecord = typeof schema.contacts.$inferSelect;
+
 const DEFAULT_DEAL_STAGES = [
   {
     name: "Oportunidad identificada",
@@ -192,7 +195,7 @@ export async function seedTeams() {
   }
 }
 
-export async function seedCompanies(userId: string) {
+export async function seedCompanies(userId: string): Promise<CompanyRecord[]> {
   console.log("🌱 Seeding companies...");
 
   try {
@@ -217,7 +220,7 @@ export async function seedCompanies(userId: string) {
   }
 }
 
-export async function seedContacts(userIds: string[], companyIds: string[]) {
+export async function seedContacts(userIds: string[], companyIds: string[]): Promise<ContactRecord[]> {
   console.log("🌱 Seeding contacts...");
 
   try {
@@ -290,7 +293,7 @@ export async function seedContacts(userIds: string[], companyIds: string[]) {
   }
 }
 
-export async function seedDeals(userIds: string[], contactIds: string[], companyIds: string[], stageIds: string[], exchangeRateId: string) {
+export async function seedDeals(userIds: string[], contactIds: string[], companyIds: string[], stageIds: string[], exchangeRateId: string): Promise<void> {
   console.log("🌱 Seeding deals...");
 
   try {

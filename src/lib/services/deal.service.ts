@@ -152,7 +152,7 @@ interface UpdateDealData {
 export async function updateDeal(id: string, data: UpdateDealData): Promise<Deal | null> {
   console.log("[deal.service] Updating deal:", id)
 
-  const updateData: any = { updatedAt: new Date() }
+  const updateData: Partial<typeof deals.$inferInsert> = { updatedAt: new Date() }
 
   if (data.title !== undefined) updateData.title = data.title
   if (data.currency !== undefined) updateData.currency = data.currency

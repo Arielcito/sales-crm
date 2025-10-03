@@ -291,7 +291,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>¿Eliminar empresa?</AlertDialogTitle>
               <AlertDialogDescription>
-                ¿Estás seguro de que deseas eliminar la empresa "{deletingCompany.name}"? Esta acción no se puede
+                ¿Estás seguro de que deseas eliminar la empresa &quot;{deletingCompany.name}&quot;? Esta acción no se puede
                 deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -309,7 +309,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>¿Eliminar contacto?</AlertDialogTitle>
               <AlertDialogDescription>
-                ¿Estás seguro de que deseas eliminar el contacto "{deletingContact.name}"? Esta acción no se puede
+                ¿Estás seguro de que deseas eliminar el contacto &quot;{deletingContact.name}&quot;? Esta acción no se puede
                 deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>

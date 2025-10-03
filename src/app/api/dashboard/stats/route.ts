@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { db } from "@/lib/db"
-import { deals, contacts, dealStages } from "@/lib/db/schema"
-import { eq, inArray, sql, and } from "drizzle-orm"
-import { getUsersByLevel } from "@/lib/services/user.service"
+import { deals, contacts } from "@/lib/db/schema"
+import { inArray, sql } from "drizzle-orm"
+import { getUserById, getUsersByLevel } from "@/lib/services/user.service"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log("[API /dashboard/stats] GET request received")
 
     const session = await auth.api.getSession({ headers: await headers() })
 
-    if (!session) {
+    if (!session?.user) {
       console.log("[API /dashboard/stats] No session found")
       return NextResponse.json(
         { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
@@ -20,15 +20,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const currentUser = {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      role: (session.user as any).role as string,
-      level: (session.user as any).level as number,
-      managerId: (session.user as any).managerId as string | undefined,
-      teamId: (session.user as any).teamId as string | undefined,
-      image: session.user.image || undefined,
+    const currentUser = await getUserById(session.user.id)
+
+    if (!currentUser) {
+      console.log("[API /dashboard/stats] Current user not found")
+      return NextResponse.json(
+        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
+        { status: 404 }
+      )
     }
 
     console.log("[API /dashboard/stats] Fetching stats for user level:", currentUser.level)

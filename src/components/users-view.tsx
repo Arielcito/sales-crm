@@ -44,9 +44,10 @@ export function UsersView({ currentUser }: UsersViewProps) {
     try {
       await deleteUserMutation.mutateAsync(user.id)
       setDeletingUser(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[UsersView] Error deleting user:", error)
-      alert(error.message || "Error al eliminar usuario")
+      const message = error instanceof Error ? error.message : "Error al eliminar usuario"
+      alert(message)
       setDeletingUser(null)
     }
   }
@@ -106,7 +107,7 @@ export function UsersView({ currentUser }: UsersViewProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
               <AlertDialogDescription>
-                ¿Estás seguro de que deseas eliminar al usuario "{deletingUser.name}"? Esta acción marcará al usuario
+                ¿Estás seguro de que deseas eliminar al usuario &quot;{deletingUser.name}&quot;? Esta acción marcará al usuario
                 como inhabilitado.
               </AlertDialogDescription>
             </AlertDialogHeader>

@@ -1,24 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
-import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
-import { users } from "@/lib/db/schema"
 import { updateUserSchema } from "@/lib/schemas/user"
 import { deleteUser, getUserById, updateUser, validateManagerAssignment } from "@/lib/services/user.service"
 import { canManageUser } from "@/lib/utils"
+import { ZodError } from "zod"
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      console.log("[API /users/[id]] Missing user id in params")
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de usuario no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /users/[id]] GET request for user:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
 
-    if (!session) {
+    if (!session?.user) {
       console.log("[API /users/[id]] No session found")
       return NextResponse.json(
         { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
@@ -53,15 +60,24 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      console.log("[API /users/[id]] Missing user id in params")
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de usuario no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /users/[id]] PATCH request for user:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
 
-    if (!session) {
+    if (!session?.user) {
       console.log("[API /users/[id]] No session found")
       return NextResponse.json(
         { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
@@ -69,9 +85,14 @@ export async function PATCH(
       )
     }
 
-    const currentUser = {
-      id: session.user.id,
-      level: (session.user as any).level as number,
+    const currentUser = await getUserById(session.user.id)
+
+    if (!currentUser) {
+      console.log("[API /users/[id]] Current user not found")
+      return NextResponse.json(
+        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
+        { status: 404 }
+      )
     }
 
     if (currentUser.level > 2 && currentUser.id !== id) {
@@ -125,17 +146,17 @@ export async function PATCH(
     console.log("[API /users/[id]] User updated:", updatedUser.id)
 
     return NextResponse.json({ success: true, data: updatedUser })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API /users/[id]] Error:", error)
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "VALIDATION_ERROR",
             message: "Error de validación",
-            details: error.errors.map((e: any) => `${e.path.join(".")}: ${e.message}`)
+            details: error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`)
           }
         },
         { status: 400 }
@@ -154,10 +175,18 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de usuario no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /users/[id]] DELETE request for user:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
@@ -168,7 +197,7 @@ export async function DELETE(
       )
     }
 
-    const [currentUser] = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1)
+    const currentUser = await getUserById(session.user.id)
     if (!currentUser) {
       return NextResponse.json(
         { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario actual no encontrado" } },
@@ -184,7 +213,7 @@ export async function DELETE(
       )
     }
 
-    if (!canManageUser({ ...currentUser, managerId: currentUser.managerId || undefined, teamId: currentUser.teamId || undefined, image: currentUser.image || undefined }, targetUser.level)) {
+    if (!canManageUser(currentUser, targetUser.level)) {
       return NextResponse.json(
         { success: false, error: { code: "FORBIDDEN", message: "No tienes permisos para eliminar este usuario" } },
         { status: 403 }

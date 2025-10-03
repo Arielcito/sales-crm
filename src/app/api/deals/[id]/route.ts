@@ -3,16 +3,23 @@ import { getDealById, updateDeal, deleteDeal } from "@/lib/services/deal.service
 import { updateDealSchema } from "@/lib/schemas/deal"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
+import { ZodError } from "zod"
 
-interface RouteParams {
-  params: Promise<{
-    id: string
-  }>
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      console.log("[API /deals/:id] Missing deal id in params")
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de negocio no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /deals/:id] GET request for deal:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
@@ -50,9 +57,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      console.log("[API /deals/:id] Missing deal id in params")
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de negocio no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /deals/:id] PATCH request for deal:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
@@ -83,17 +102,17 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     console.log("[API /deals/:id] Deal updated:", deal.id)
 
     return NextResponse.json({ success: true, data: deal })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API /deals/:id] Error:", error)
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "VALIDATION_ERROR",
             message: "Error de validación",
-            details: error.errors.map((e: any) => `${e.path.join(".")}: ${e.message}`)
+            details: error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`)
           }
         },
         { status: 400 }
@@ -110,9 +129,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) {
   try {
-    const { id } = await params
+    const params = await context.params
+    const id = params?.id
+
+    if (!id) {
+      console.log("[API /deals/:id] Missing deal id in params")
+      return NextResponse.json(
+        { success: false, error: { code: "BAD_REQUEST", message: "ID de negocio no proporcionado" } },
+        { status: 400 }
+      )
+    }
     console.log("[API /deals/:id] DELETE request for deal:", id)
 
     const session = await auth.api.getSession({ headers: await headers() })
@@ -149,5 +180,3 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     )
   }
 }
-
-

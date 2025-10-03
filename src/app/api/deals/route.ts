@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAllDeals, createDeal } from "@/lib/services/deal.service"
-import { getUsersByLevel } from "@/lib/services/user.service"
-import { createDealSchema, getDealQuerySchema } from "@/lib/schemas/deal"
+import { getUserById, getUsersByLevel } from "@/lib/services/user.service"
+import { createDealSchema } from "@/lib/schemas/deal"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
+import { ZodError } from "zod"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log("[API /deals] GET request received")
 
     const session = await auth.api.getSession({ headers: await headers() })
 
-    if (!session) {
+    if (!session?.user) {
       console.log("[API /deals] No session found")
       return NextResponse.json(
         { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
@@ -19,19 +20,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const currentUser = {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      role: (session.user as any).role as string,
-      level: (session.user as any).level as number,
-      managerId: (session.user as any).managerId as string | undefined,
-      teamId: (session.user as any).teamId as string | undefined,
-      image: session.user.image || undefined,
-    }
+    const currentUser = await getUserById(session.user.id)
 
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId") || undefined
+    if (!currentUser) {
+      console.log("[API /deals] Current user not found")
+      return NextResponse.json(
+        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
+        { status: 404 }
+      )
+    }
 
     console.log("[API /deals] Fetching deals for user level:", currentUser.level)
 
@@ -81,17 +78,17 @@ export async function POST(request: NextRequest) {
     console.log("[API /deals] Deal created:", deal.id)
 
     return NextResponse.json({ success: true, data: deal }, { status: 201 })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API /deals] Error:", error)
 
-    if (error.name === "ZodError") {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: "VALIDATION_ERROR",
             message: "Error de validación",
-            details: error.errors.map((e: any) => `${e.path.join(".")}: ${e.message}`)
+            details: error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`)
           }
         },
         { status: 400 }
@@ -107,5 +104,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-

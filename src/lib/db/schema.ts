@@ -19,7 +19,7 @@ export const users = pgTable("user", {
   image: text("image"),
   role: varchar("role", { length: 50 }).notNull().default("vendedor"),
   level: integer("level").notNull().default(4),
-  managerId: uuid("managerId").references((): any => users.id, { onDelete: "set null" }),
+  managerId: uuid("managerId").references(() => users.id, { onDelete: "set null" }),
   teamId: uuid("teamId").references(() => teams.id, { onDelete: "set null" }),
   banned: boolean("banned").default(false),
   banReason: text("banReason"),

@@ -90,9 +90,10 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
         })
       }
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[UserFormModal] Error submitting form:", error)
-      alert(error.message || "Error al guardar usuario")
+      const message = error instanceof Error ? error.message : "Error al guardar usuario"
+      alert(message)
     }
   }
 
