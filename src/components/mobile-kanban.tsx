@@ -1,13 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { AuthService } from "@/lib/auth"
-import { DataService } from "@/lib/data"
+import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
+import { useCompanies } from "@/hooks/use-companies"
+import { useContacts } from "@/hooks/use-contacts"
+import { useConvertCurrency } from "@/hooks/use-exchange-rate"
 import type { Deal, User, Currency, DealStage } from "@/lib/types"
 import { DealModal } from "./deal-modal"
 import { CurrencyToggle } from "./currency-toggle"
@@ -51,7 +54,12 @@ interface MobileKanbanProps {
 }
 
 export function MobileKanban({ currentUser }: MobileKanbanProps) {
-  const [deals, setDeals] = useState<Deal[]>([])
+  const { data: allDeals = [], isLoading: dealsLoading } = useDeals(currentUser.id)
+  const { data: companies = [] } = useCompanies()
+  const { data: contacts = [] } = useContacts()
+  const { convertAmount } = useConvertCurrency()
+  const updateDealMutation = useUpdateDeal()
+
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [currency, setCurrency] = useState<Currency>("USD")
   const [showNewDealModal, setShowNewDealModal] = useState(false)
@@ -68,20 +76,17 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
     "proyectos-terminados-perdidos",
   ]
 
-  useEffect(() => {
-    loadDeals()
+  const visibleUsers = useMemo(() => {
+    return AuthService.getUsersByLevel(currentUser)
   }, [currentUser])
 
-  const loadDeals = () => {
-    const allDeals = DataService.getDeals()
-    const visibleUsers = AuthService.getUsersByLevel(currentUser)
+  const deals = useMemo(() => {
     const visibleUserIds = visibleUsers.map((user) => user.id)
-    const filteredDeals = allDeals.filter((deal) => visibleUserIds.includes(deal.responsible_user_id))
-    setDeals(filteredDeals)
-  }
+    return allDeals.filter((deal) => visibleUserIds.includes(deal.responsible_user_id || deal.userId))
+  }, [allDeals, visibleUsers])
 
-  const formatAmount = (deal: Deal) => {
-    const amount = DataService.convertAmount(deal.original_amount, deal.currency, currency)
+  const formatAmount = async (deal: Deal) => {
+    const amount = await convertAmount(deal.amountUsd || 0, deal.currency, currency)
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: currency,
@@ -95,43 +100,39 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
   }
 
   const getCompanyName = (companyId: string) => {
-    return DataService.getCompanyById(companyId)?.name || "Empresa Desconocida"
+    return companies.find((c) => c.id === companyId)?.name || "Empresa Desconocida"
   }
 
   const getContactName = (contactId: string) => {
-    return DataService.getContactById(contactId)?.name || "Contacto Desconocido"
+    return contacts.find((c) => c.id === contactId)?.name || "Contacto Desconocido"
   }
 
-  const moveToNextStage = (deal: Deal) => {
+  const moveToNextStage = async (deal: Deal) => {
     const currentIndex = stages.indexOf(deal.stage)
     if (currentIndex < stages.length - 1) {
       const newStage = stages[currentIndex + 1]
-      const updatedDeal = DataService.updateDeal(deal.id, { stage: newStage })
-      if (updatedDeal) {
-        DataService.addActivityLog({
-          deal_id: deal.id,
-          user_id: currentUser.id,
-          action: "stage_changed",
-          details: `Moved from '${STAGE_LABELS[deal.stage]}' to '${STAGE_LABELS[newStage]}'`,
+      try {
+        await updateDealMutation.mutateAsync({
+          id: deal.id,
+          data: { stageId: newStage }
         })
-        loadDeals()
+      } catch (error) {
+        console.error("[MobileKanban] Error moving deal to next stage:", error)
       }
     }
   }
 
-  const moveToPrevStage = (deal: Deal) => {
+  const moveToPrevStage = async (deal: Deal) => {
     const currentIndex = stages.indexOf(deal.stage)
     if (currentIndex > 0) {
       const newStage = stages[currentIndex - 1]
-      const updatedDeal = DataService.updateDeal(deal.id, { stage: newStage })
-      if (updatedDeal) {
-        DataService.addActivityLog({
-          deal_id: deal.id,
-          user_id: currentUser.id,
-          action: "stage_changed",
-          details: `Moved from '${STAGE_LABELS[deal.stage]}' to '${STAGE_LABELS[newStage]}'`,
+      try {
+        await updateDealMutation.mutateAsync({
+          id: deal.id,
+          data: { stageId: newStage }
         })
-        loadDeals()
+      } catch (error) {
+        console.error("[MobileKanban] Error moving deal to previous stage:", error)
       }
     }
   }
@@ -203,9 +204,11 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
 
           {stages.map((stage) => {
             const stageDeals = deals.filter((deal) => deal.stage === stage)
-            const stageTotal = stageDeals.reduce((sum, deal) => {
-              return sum + DataService.convertAmount(deal.original_amount, deal.currency, currency)
-            }, 0)
+            const stageTotal = stageDeals.reduce(async (sumPromise, deal) => {
+              const sum = await sumPromise
+              const converted = await convertAmount(deal.amountUsd || 0, deal.currency, currency)
+              return sum + converted
+            }, Promise.resolve(0))
 
             return (
               <TabsContent key={stage} value={stage} className="flex-1 overflow-hidden m-0">
@@ -325,12 +328,12 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
           currentUser={currentUser}
           currency={currency}
           onClose={() => setSelectedDeal(null)}
-          onUpdate={loadDeals}
+          onUpdate={() => setSelectedDeal(null)}
         />
       )}
 
       {showNewDealModal && (
-        <NewDealModal currentUser={currentUser} onClose={() => setShowNewDealModal(false)} onSuccess={loadDeals} />
+        <NewDealModal currentUser={currentUser} onClose={() => setShowNewDealModal(false)} onSuccess={() => setShowNewDealModal(false)} />
       )}
     </div>
   )

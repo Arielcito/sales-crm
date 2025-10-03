@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Building2, Plus, Search, Users, Mail, Phone, Briefcase, Globe, Pencil, Trash2 } from "lucide-react"
-import { DataService } from "@/lib/data"
+import { useCompanies, useDeleteCompany } from "@/hooks/use-companies"
+import { useContacts, useDeleteContact } from "@/hooks/use-contacts"
 import type { User, Company, Contact } from "@/lib/types"
 import { NewCompanyModal } from "@/components/new-company-modal"
 import { NewContactModal } from "@/components/new-contact-modal"
@@ -28,8 +29,11 @@ interface CompaniesViewProps {
 }
 
 export function CompaniesView({ currentUser }: CompaniesViewProps) {
-  const [companies, setCompanies] = useState(DataService.getCompanies())
-  const [contacts, setContacts] = useState(DataService.getContacts())
+  const { data: companies = [], isLoading: companiesLoading } = useCompanies()
+  const { data: contacts = [], isLoading: contactsLoading } = useContacts()
+  const deleteCompanyMutation = useDeleteCompany()
+  const deleteContactMutation = useDeleteContact()
+
   const [searchTerm, setSearchTerm] = useState("")
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false)
   const [showNewContactModal, setShowNewContactModal] = useState(false)
@@ -39,50 +43,48 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null)
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null)
 
-  const filteredCompanies = companies.filter(
-    (company) =>
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.industry?.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const filteredCompanies = useMemo(() => {
+    return companies.filter(
+      (company) =>
+        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.industry?.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+  }, [companies, searchTerm])
 
   const handleCompanyCreated = () => {
-    setCompanies(DataService.getCompanies())
     setShowNewCompanyModal(false)
   }
 
   const handleContactCreated = () => {
-    setContacts(DataService.getContacts())
     setShowNewContactModal(false)
     setSelectedCompany(null)
   }
 
   const handleCompanyUpdated = () => {
-    setCompanies(DataService.getCompanies())
     setEditingCompany(null)
   }
 
   const handleContactUpdated = () => {
-    setContacts(DataService.getContacts())
     setEditingContact(null)
   }
 
-  const handleDeleteCompany = (company: Company) => {
-    const success = DataService.deleteCompany(company.id)
-    if (success) {
-      setCompanies(DataService.getCompanies())
+  const handleDeleteCompany = async (company: Company) => {
+    try {
+      await deleteCompanyMutation.mutateAsync(company.id)
       setDeletingCompany(null)
-    } else {
+    } catch (error) {
+      console.error("[CompaniesView] Error deleting company:", error)
       alert("No se puede eliminar la empresa porque tiene contactos o negociaciones asociadas")
       setDeletingCompany(null)
     }
   }
 
-  const handleDeleteContact = (contact: Contact) => {
-    const success = DataService.deleteContact(contact.id)
-    if (success) {
-      setContacts(DataService.getContacts())
+  const handleDeleteContact = async (contact: Contact) => {
+    try {
+      await deleteContactMutation.mutateAsync(contact.id)
       setDeletingContact(null)
-    } else {
+    } catch (error) {
+      console.error("[CompaniesView] Error deleting contact:", error)
       alert("No se puede eliminar el contacto porque tiene negociaciones asociadas")
       setDeletingContact(null)
     }
@@ -90,6 +92,19 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
 
   const getCompanyContacts = (companyId: string) => {
     return contacts.filter((contact) => contact.company_id === companyId)
+  }
+
+  if (companiesLoading || contactsLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Empresas y Contactos</h1>
+            <p className="text-muted-foreground mt-1">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

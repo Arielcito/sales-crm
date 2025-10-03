@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DataService } from "@/lib/data"
+import { useUpdateCompany } from "@/hooks/use-companies"
 import type { Company } from "@/lib/types"
 
 interface EditCompanyModalProps {
@@ -22,19 +22,17 @@ export function EditCompanyModal({ company, onClose, onSuccess }: EditCompanyMod
     industry: company.industry || "",
     website: company.website || "",
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const updateCompanyMutation = useUpdateCompany()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     try {
-      DataService.updateCompany(company.id, formData)
+      await updateCompanyMutation.mutateAsync({ id: company.id, data: formData })
       onSuccess()
     } catch (error) {
-      console.error("Error updating company:", error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("[EditCompanyModal] Error updating company:", error)
     }
   }
 
@@ -81,8 +79,8 @@ export function EditCompanyModal({ company, onClose, onSuccess }: EditCompanyMod
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+            <Button type="submit" disabled={updateCompanyMutation.isPending}>
+              {updateCompanyMutation.isPending ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </form>

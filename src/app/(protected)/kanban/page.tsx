@@ -1,28 +1,44 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { KanbanBoard } from "@/components/kanban-board"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import { useDealStages } from "@/hooks/use-deal-stages"
+import { useCompanies } from "@/hooks/use-companies"
+import { useContacts } from "@/hooks/use-contacts"
+import { useUsers } from "@/hooks/use-users"
 
 export default function KanbanPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold mb-2">Pipeline de Ventas</h2>
-        <p className="text-muted-foreground">
-          Gestiona tus oportunidades de venta en formato Kanban
-        </p>
-      </div>
+  const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
+  const { data: stages = [], isLoading: isLoadingStages } = useDealStages()
+  const { data: companies = [], isLoading: isLoadingCompanies } = useCompanies()
+  const { data: contacts = [], isLoading: isLoadingContacts } = useContacts()
+  const { data: users = [], isLoading: isLoadingUsers } = useUsers()
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vista Kanban</CardTitle>
-          <CardDescription>Próximamente disponible</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Esta página mostrará un tablero Kanban con las etapas del pipeline de ventas
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+  const isLoading = isLoadingUser || isLoadingStages || isLoadingCompanies || isLoadingContacts || isLoadingUsers
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">Cargando...</div>
+      </div>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">No autorizado</div>
+      </div>
+    )
+  }
+
+  return (
+    <KanbanBoard
+      currentUser={currentUser}
+      stages={stages}
+      companies={companies}
+      contacts={contacts}
+      users={users}
+    />
   )
 }

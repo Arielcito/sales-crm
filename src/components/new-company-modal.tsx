@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DataService } from "@/lib/data"
+import { useCreateCompany } from "@/hooks/use-companies"
 
 interface NewCompanyModalProps {
   onClose: () => void
@@ -20,19 +20,17 @@ export function NewCompanyModal({ onClose, onSuccess }: NewCompanyModalProps) {
     industry: "",
     website: "",
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const createCompanyMutation = useCreateCompany()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     try {
-      DataService.createCompany(formData)
+      await createCompanyMutation.mutateAsync(formData)
       onSuccess()
     } catch (error) {
-      console.error("Error creating company:", error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("[NewCompanyModal] Error creating company:", error)
     }
   }
 
@@ -79,8 +77,8 @@ export function NewCompanyModal({ onClose, onSuccess }: NewCompanyModalProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creando..." : "Crear Empresa"}
+            <Button type="submit" disabled={createCompanyMutation.isPending}>
+              {createCompanyMutation.isPending ? "Creando..." : "Crear Empresa"}
             </Button>
           </div>
         </form>

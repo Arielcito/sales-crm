@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, DollarSign, Target, BarChart3, Activity, Users, ArrowUpRight } from "lucide-react"
 import { AuthService } from "@/lib/auth"
-import { DataService } from "@/lib/data"
+import { useDashboardAnalytics } from "@/hooks/use-dashboard-analytics"
 import type { User, Currency } from "@/lib/types"
 import { CurrencyToggle } from "@/components/currency-toggle"
 
@@ -33,54 +33,30 @@ interface KPIData {
 }
 
 export function Dashboard({ currentUser }: DashboardProps) {
-  const [kpiData, setKpiData] = useState<KPIData | null>(null)
   const [currency, setCurrency] = useState<Currency>("USD")
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    calculateKPIs()
-  }, [currentUser, currency])
+  const { data: analyticsData, isLoading } = useDashboardAnalytics({
+    userId: currentUser.id,
+    currency,
+  })
 
-  const calculateKPIs = () => {
-    setIsLoading(true)
-
-    const allDeals = DataService.getDeals()
-    const visibleUsers = AuthService.getUsersByLevel(currentUser)
-    const visibleUserIds = visibleUsers.map((user) => user.id)
-
-    // Filter deals based on user permissions
-    const deals = allDeals.filter((deal) => visibleUserIds.includes(deal.responsible_user_id))
-
-    // Calculate basic metrics
-    const totalDeals = deals.length
-    const wonDeals = deals.filter((deal) => deal.stage === "facturacion-final").length
-    const conversionRate = totalDeals > 0 ? (wonDeals / totalDeals) * 100 : 0
-
-    // Calculate values in selected currency
-    const totalValue = deals.reduce((sum, deal) => {
-      return sum + DataService.convertAmount(deal.original_amount, deal.currency, currency)
-    }, 0)
-
-    const wonValue = deals
-      .filter((deal) => deal.stage === "facturacion-final")
-      .reduce((sum, deal) => {
-        return sum + DataService.convertAmount(deal.original_amount, deal.currency, currency)
-      }, 0)
-
-    const avgDealSize = totalDeals > 0 ? totalValue / totalDeals : 0
-
-    // Group by stage
-    const dealsByStage: Record<string, number> = {}
-    const valueByStage: Record<string, number> = {}
-
-    deals.forEach((deal) => {
-      dealsByStage[deal.stage] = (dealsByStage[deal.stage] || 0) + 1
-      valueByStage[deal.stage] =
-        (valueByStage[deal.stage] || 0) + DataService.convertAmount(deal.original_amount, deal.currency, currency)
-    })
-
-    // Mock recent activity
-    const recentActivity = [
+  const kpiData = analyticsData ? {
+    totalDeals: analyticsData.dealCount,
+    totalValue: analyticsData.totalValue,
+    wonDeals: Object.values(analyticsData.dealsByStage).filter((_, idx) => {
+      const stages = Object.keys(analyticsData.dealsByStage)
+      return stages[idx] === "facturacion-final"
+    }).reduce((sum, count) => sum + count, 0),
+    wonValue: analyticsData.closedValue,
+    conversionRate: analyticsData.dealCount > 0
+      ? (Object.entries(analyticsData.dealsByStage)
+          .filter(([stage]) => stage === "facturacion-final")
+          .reduce((sum, [, count]) => sum + count, 0) / analyticsData.dealCount) * 100
+      : 0,
+    avgDealSize: analyticsData.dealCount > 0 ? analyticsData.totalValue / analyticsData.dealCount : 0,
+    dealsByStage: analyticsData.dealsByStage,
+    valueByStage: analyticsData.valueByStage,
+    recentActivity: [
       {
         id: "1",
         type: "deal_moved",
@@ -109,22 +85,8 @@ export function Dashboard({ currentUser }: DashboardProps) {
         timestamp: "2024-01-21T14:20:00Z",
         user: "Ana García",
       },
-    ]
-
-    setKpiData({
-      totalDeals,
-      totalValue,
-      wonDeals,
-      wonValue,
-      conversionRate,
-      avgDealSize,
-      dealsByStage,
-      valueByStage,
-      recentActivity,
-    })
-
-    setIsLoading(false)
-  }
+    ],
+  } : null
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-AR", {

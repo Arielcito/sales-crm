@@ -68,6 +68,8 @@ export interface ExchangeRate {
   updatedAt: Date;
 }
 
+export type Currency = "USD" | "ARS"
+
 export interface Deal {
   id: string;
   userId: string;
@@ -75,8 +77,8 @@ export interface Deal {
   companyId?: string | null;
   title: string;
   currency: string;
-  amountUsd?: string | null;
-  amountArs?: string | null;
+  amountUsd?: number | null;
+  amountArs?: number | null;
   exchangeRateId?: string | null;
   stageId: string;
   probability?: number | null;

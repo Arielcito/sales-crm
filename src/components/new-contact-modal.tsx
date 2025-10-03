@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DataService } from "@/lib/data"
+import { useCreateContact } from "@/hooks/use-contacts"
 
 interface NewContactModalProps {
   companyId: string
@@ -24,22 +24,20 @@ export function NewContactModal({ companyId, companyName, onClose, onSuccess }: 
     position: "",
     area: "",
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const createContactMutation = useCreateContact()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     try {
-      DataService.createContact({
+      await createContactMutation.mutateAsync({
         ...formData,
         company_id: companyId,
       })
       onSuccess()
     } catch (error) {
-      console.error("Error creating contact:", error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("[NewContactModal] Error creating contact:", error)
     }
   }
 
@@ -108,8 +106,8 @@ export function NewContactModal({ companyId, companyName, onClose, onSuccess }: 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creando..." : "Crear Contacto"}
+            <Button type="submit" disabled={createContactMutation.isPending}>
+              {createContactMutation.isPending ? "Creando..." : "Crear Contacto"}
             </Button>
           </div>
         </form>

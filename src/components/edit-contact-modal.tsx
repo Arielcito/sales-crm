@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DataService } from "@/lib/data"
+import { useUpdateContact } from "@/hooks/use-contacts"
 import type { Contact } from "@/lib/types"
 
 interface EditContactModalProps {
@@ -24,19 +24,17 @@ export function EditContactModal({ contact, onClose, onSuccess }: EditContactMod
     position: contact.position || "",
     area: contact.area || "",
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const updateContactMutation = useUpdateContact()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     try {
-      DataService.updateContact(contact.id, formData)
+      await updateContactMutation.mutateAsync({ id: contact.id, data: formData })
       onSuccess()
     } catch (error) {
-      console.error("Error updating contact:", error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("[EditContactModal] Error updating contact:", error)
     }
   }
 
@@ -105,8 +103,8 @@ export function EditContactModal({ contact, onClose, onSuccess }: EditContactMod
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+            <Button type="submit" disabled={updateContactMutation.isPending}>
+              {updateContactMutation.isPending ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </form>

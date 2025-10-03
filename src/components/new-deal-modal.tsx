@@ -2,15 +2,18 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DataService, companies, contacts } from "@/lib/data"
-import { AuthService } from "@/lib/auth"
-import type { User, Currency, DealStage } from "@/lib/types"
+import { useCompanies } from "@/hooks/use-companies"
+import { useContacts } from "@/hooks/use-contacts"
+import { useCreateDeal } from "@/hooks/use-deals"
+import { useDealStages } from "@/hooks/use-deal-stages"
+import { useUsers } from "@/hooks/use-users"
+import type { User, Currency } from "@/lib/types"
 
 interface NewDealModalProps {
   currentUser: User
@@ -19,53 +22,52 @@ interface NewDealModalProps {
 }
 
 export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalProps) {
+  const { data: companies = [] } = useCompanies()
+  const { data: contacts = [] } = useContacts()
+  const { data: dealStages = [] } = useDealStages()
+  const { data: users = [] } = useUsers()
+  const createDealMutation = useCreateDeal()
+
   const [formData, setFormData] = useState({
-    project_name: "",
-    original_amount: "",
+    title: "",
+    amountUsd: "",
     currency: "USD" as Currency,
-    deadline: "",
-    client_id: "",
-    company_id: "",
-    responsible_user_id: currentUser.id,
-    stage: "oportunidad-identificada" as DealStage,
+    expectedCloseDate: "",
+    contactId: "",
+    companyId: "",
+    userId: currentUser.id,
+    stageId: dealStages[0]?.id || "",
   })
 
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const visibleUsers = AuthService.getUsersByLevel(currentUser)
+  const visibleUsers = useMemo(() => {
+    return users.filter(user => user.level >= currentUser.level)
+  }, [users, currentUser])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     try {
-      const newDeal = DataService.createDeal({
+      await createDealMutation.mutateAsync({
         ...formData,
-        original_amount: Number.parseFloat(formData.original_amount),
-      })
-
-      // Add activity log
-      DataService.addActivityLog({
-        deal_id: newDeal.id,
-        user_id: currentUser.id,
-        action: "deal_created",
-        details: `Nueva negociación creada: ${formData.project_name}`,
+        amountUsd: formData.currency === "USD" ? Number.parseFloat(formData.amountUsd) : undefined,
+        amountArs: formData.currency === "ARS" ? Number.parseFloat(formData.amountUsd) : undefined,
+        expectedCloseDate: formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined,
       })
 
       onSuccess()
       onClose()
     } catch (error) {
-      console.error("Error creating deal:", error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("[NewDealModal] Error creating deal:", error)
     }
   }
 
   const handleCompanyChange = (companyId: string) => {
-    setFormData((prev) => ({ ...prev, company_id: companyId, client_id: "" }))
+    setFormData((prev) => ({ ...prev, companyId, contactId: "" }))
   }
 
-  const availableContacts = contacts.filter((contact) => contact.company_id === formData.company_id)
+  const availableContacts = useMemo(() => {
+    return contacts.filter((contact) => contact.companyId === formData.companyId)
+  }, [contacts, formData.companyId])
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -77,21 +79,21 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="project_name">Nombre del Proyecto *</Label>
+              <Label htmlFor="title">Nombre del Proyecto *</Label>
               <Input
-                id="project_name"
-                value={formData.project_name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, project_name: e.target.value }))}
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="Ej: Sistema CRM Personalizado"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="responsible_user_id">Usuario Responsable</Label>
+              <Label htmlFor="userId">Usuario Responsable</Label>
               <Select
-                value={formData.responsible_user_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, responsible_user_id: value }))}
+                value={formData.userId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, userId: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -107,12 +109,12 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="original_amount">Monto *</Label>
+              <Label htmlFor="amountUsd">Monto *</Label>
               <Input
-                id="original_amount"
+                id="amountUsd"
                 type="number"
-                value={formData.original_amount}
-                onChange={(e) => setFormData((prev) => ({ ...prev, original_amount: e.target.value }))}
+                value={formData.amountUsd}
+                onChange={(e) => setFormData((prev) => ({ ...prev, amountUsd: e.target.value }))}
                 placeholder="150000"
                 required
                 min="0"
@@ -137,8 +139,8 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="company_id">Empresa *</Label>
-              <Select value={formData.company_id} onValueChange={handleCompanyChange} required>
+              <Label htmlFor="companyId">Empresa *</Label>
+              <Select value={formData.companyId} onValueChange={handleCompanyChange} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar empresa" />
                 </SelectTrigger>
@@ -153,16 +155,16 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="client_id">Contacto *</Label>
+              <Label htmlFor="contactId">Contacto *</Label>
               <Select
-                value={formData.client_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, client_id: value }))}
+                value={formData.contactId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, contactId: value }))}
                 required
-                disabled={!formData.company_id}
+                disabled={!formData.companyId}
               >
                 <SelectTrigger>
                   <SelectValue
-                    placeholder={formData.company_id ? "Seleccionar contacto" : "Primero selecciona una empresa"}
+                    placeholder={formData.companyId ? "Seleccionar contacto" : "Primero selecciona una empresa"}
                   />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,30 +185,32 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline">Fecha Límite *</Label>
+              <Label htmlFor="expectedCloseDate">Fecha Límite *</Label>
               <Input
-                id="deadline"
+                id="expectedCloseDate"
                 type="date"
-                value={formData.deadline}
-                onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
+                value={formData.expectedCloseDate}
+                onChange={(e) => setFormData((prev) => ({ ...prev, expectedCloseDate: e.target.value }))}
                 required
                 min={new Date().toISOString().split("T")[0]}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="stage">Etapa Inicial</Label>
+              <Label htmlFor="stageId">Etapa Inicial</Label>
               <Select
-                value={formData.stage}
-                onValueChange={(value: DealStage) => setFormData((prev) => ({ ...prev, stage: value }))}
+                value={formData.stageId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, stageId: value }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="oportunidad-identificada">Oportunidad identificada</SelectItem>
-                  <SelectItem value="cotizacion-generada">Cotización generada y enviada</SelectItem>
-                  <SelectItem value="aprobacion-pendiente">Aprobación pendiente</SelectItem>
+                  {dealStages.map((stage) => (
+                    <SelectItem key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -216,8 +220,8 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creando..." : "Crear Negociación"}
+            <Button type="submit" disabled={createDealMutation.isPending}>
+              {createDealMutation.isPending ? "Creando..." : "Crear Negociación"}
             </Button>
           </div>
         </form>

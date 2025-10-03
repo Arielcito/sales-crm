@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { DataService } from "@/lib/data"
+import { Button } from "@/components/ui/button"
+import { useExchangeRate } from "@/hooks/use-exchange-rate"
 import type { Currency } from "@/lib/types"
 
 interface CurrencyToggleProps {
@@ -11,7 +11,8 @@ interface CurrencyToggleProps {
 }
 
 export function CurrencyToggle({ currency, onCurrencyChange }: CurrencyToggleProps) {
-  const exchangeRate = DataService.getCurrentExchangeRate("USD", "ARS")
+  const { data: exchangeRateData } = useExchangeRate()
+  const exchangeRate = exchangeRateData?.venta || 0
 
   return (
     <div className="flex items-center space-x-2">
