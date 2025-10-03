@@ -40,7 +40,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
     e.dataTransfer.dropEffect = "move"
   }
 
-  const handleDrop = async (e: React.DragEvent, newStageId: string) => {
+  const handleDrop = (e: React.DragEvent, newStageId: string) => {
     e.preventDefault()
     if (!draggedDeal || draggedDeal.stageId === newStageId) return
 

@@ -9,7 +9,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
@@ -25,15 +24,13 @@ import {
   Building2,
 } from "lucide-react"
 import { signOut } from "@/lib/auth-client"
-import type { User, NavigationItem, ViewType } from "@/lib/types"
+import { useCurrentUser } from "@/hooks/use-current-user"
+import type { NavigationItem, ViewType } from "@/lib/types"
 
-interface AppSidebarProps {
-  currentUser: User
-}
-
-export function AppSidebar({ currentUser }: AppSidebarProps) {
+export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const { data: currentUser, isLoading } = useCurrentUser()
 
   const navigationItems: NavigationItem[] = [
     { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
@@ -78,7 +75,7 @@ export function AppSidebar({ currentUser }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => {
-                if (item.levelRequired && currentUser.level !== item.levelRequired) {
+                if (item.levelRequired && currentUser && currentUser.level !== item.levelRequired) {
                   return null
                 }
 
@@ -109,25 +106,40 @@ export function AppSidebar({ currentUser }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="bg-sidebar-accent rounded-xl p-4 mb-3">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold text-sm">
-              {currentUser.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-sidebar-foreground truncate">
-                {currentUser.name}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60">{currentUser.role}</p>
+        {isLoading ? (
+          <div className="bg-sidebar-accent rounded-xl p-4 mb-3">
+            <div className="animate-pulse">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                </div>
+              </div>
+              <div className="h-6 bg-gray-300 rounded w-full"></div>
             </div>
           </div>
-          <Badge
-            variant="secondary"
-            className="bg-primary/20 text-primary border-0 text-xs font-medium w-full justify-center"
-          >
-            Nivel {currentUser.level}
-          </Badge>
-        </div>
+        ) : currentUser ? (
+          <div className="bg-sidebar-accent rounded-xl p-4 mb-3">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                  {currentUser.name}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60">{currentUser.role}</p>
+              </div>
+            </div>
+            <Badge
+              variant="secondary"
+              className="bg-primary/20 text-primary border-0 text-xs font-medium w-full justify-center"
+            >
+              Nivel {currentUser.level}
+            </Badge>
+          </div>
+        ) : null}
 
         <Button
           variant="ghost"

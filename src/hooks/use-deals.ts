@@ -37,9 +37,40 @@ export function useUpdateDeal() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateDealInput }) => updateDeal(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["deals"] })
+      await queryClient.cancelQueries({ queryKey: ["deals", id] })
+
+      const previousDeals = queryClient.getQueryData<Deal[]>(["deals"])
+      const previousDeal = queryClient.getQueryData<Deal>(["deals", id])
+
+      if (previousDeals) {
+        queryClient.setQueryData<Deal[]>(["deals"], (old = []) =>
+          old.map((deal) =>
+            deal.id === id ? { ...deal, ...data } : deal
+          )
+        )
+      }
+
+      if (previousDeal) {
+        queryClient.setQueryData<Deal>(["deals", id], { ...previousDeal, ...data })
+      }
+
+      return { previousDeals, previousDeal }
+    },
+    onError: (err, { id }, context) => {
+      console.error("[useUpdateDeal] Error updating deal:", err)
+      if (context?.previousDeals) {
+        queryClient.setQueryData(["deals"], context.previousDeals)
+      }
+      if (context?.previousDeal) {
+        queryClient.setQueryData(["deals", id], context.previousDeal)
+      }
+    },
     onSuccess: (updatedDeal: Deal) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] })
       queryClient.invalidateQueries({ queryKey: ["deals", updatedDeal.id] })
+      queryClient.invalidateQueries({ queryKey: ["deal-history", updatedDeal.id] })
     },
   })
 }
