@@ -20,103 +20,88 @@ interface ExchangeRate {
   lastUpdate: Date
 }
 
+interface DolarApiResponse {
+  moneda: string
+  casa: string
+  nombre: string
+  compra: number
+  venta: number
+  fechaActualizacion: string
+}
+
 export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([])
   const [isUpdating, setIsUpdating] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [previousRates, setPreviousRates] = useState<Map<string, number>>(new Map())
 
   useEffect(() => {
     loadExchangeRates()
   }, [])
 
-  const loadExchangeRates = () => {
-    // Mock data - in production this would fetch from an API
-    const rates: ExchangeRate[] = [
-      {
-        currency: "USD",
-        name: "Dólar Blue",
-        type: "Blue",
-        rate: 1050,
-        change: 2.5,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "USD",
-        name: "Dólar Oficial",
-        type: "Oficial",
-        rate: 850,
-        change: 0.8,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "USD",
-        name: "Dólar Cripto",
-        type: "Cripto",
-        rate: 1045,
-        change: 1.2,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "EUR",
-        name: "Euro",
-        rate: 1150,
-        change: -0.5,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "BRL",
-        name: "Real Brasileño",
-        rate: 210,
-        change: 1.8,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "CLP",
-        name: "Peso Chileno",
-        rate: 1.15,
-        change: 0.3,
-        lastUpdate: new Date(),
-      },
-      {
-        currency: "UYU",
-        name: "Peso Uruguayo",
-        rate: 22,
-        change: -0.2,
-        lastUpdate: new Date(),
-      },
-    ]
-    setExchangeRates(rates)
-    setLastUpdate(new Date())
+  const calculateChange = (current: number, previous: number | undefined): number => {
+    if (!previous || previous === 0) return 0
+    return ((current - previous) / previous) * 100
+  }
+
+  const loadExchangeRates = async () => {
+    setIsUpdating(true)
+
+    try {
+      const [blueRes, oficialRes, criptoRes] = await Promise.all([
+        fetch("https://dolarapi.com/v1/dolares/blue"),
+        fetch("https://dolarapi.com/v1/dolares/oficial"),
+        fetch("https://dolarapi.com/v1/dolares/cripto"),
+      ])
+
+      const blue: DolarApiResponse = await blueRes.json()
+      const oficial: DolarApiResponse = await oficialRes.json()
+      const cripto: DolarApiResponse = await criptoRes.json()
+
+      const newRates: ExchangeRate[] = [
+        {
+          currency: "USD",
+          name: "Dólar Blue",
+          type: "Blue",
+          rate: blue.venta,
+          change: calculateChange(blue.venta, previousRates.get("blue")),
+          lastUpdate: new Date(blue.fechaActualizacion),
+        },
+        {
+          currency: "USD",
+          name: "Dólar Oficial",
+          type: "Oficial",
+          rate: oficial.venta,
+          change: calculateChange(oficial.venta, previousRates.get("oficial")),
+          lastUpdate: new Date(oficial.fechaActualizacion),
+        },
+        {
+          currency: "USD",
+          name: "Dólar Cripto",
+          type: "Cripto",
+          rate: cripto.venta,
+          change: calculateChange(cripto.venta, previousRates.get("cripto")),
+          lastUpdate: new Date(cripto.fechaActualizacion),
+        },
+      ]
+
+      setPreviousRates(new Map([
+        ["blue", blue.venta],
+        ["oficial", oficial.venta],
+        ["cripto", cripto.venta],
+      ]))
+
+      setExchangeRates(newRates)
+      setLastUpdate(new Date())
+    } catch (error) {
+      console.error("[CurrencySettings] Error fetching exchange rates:", error)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const handleRefresh = async () => {
-    setIsUpdating(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Mock updated rates with random fluctuations
-    const updatedRates = exchangeRates.map((rate) => ({
-      ...rate,
-      rate: rate.rate + (Math.random() * 10 - 5),
-      change: Math.random() * 5 - 2.5,
-      lastUpdate: new Date(),
-    }))
-
-    setExchangeRates(updatedRates)
-    setLastUpdate(new Date())
-    setIsUpdating(false)
-  }
-
-  const getCurrencyIcon = (currency: string) => {
-    const icons: Record<string, string> = {
-      USD: "$",
-      EUR: "€",
-      BRL: "R$",
-      CLP: "$",
-      UYU: "$U",
-    }
-    return icons[currency] || currency
+    await loadExchangeRates()
   }
 
   return (
@@ -124,7 +109,7 @@ export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Cotizaciones</h2>
-          <p className="text-muted-foreground">Valor del Peso Argentino (ARS) en diferentes monedas</p>
+          <p className="text-muted-foreground">Cotización del dólar en Argentina (Blue, Oficial, Cripto)</p>
         </div>
         <Button onClick={handleRefresh} disabled={isUpdating} size="sm">
           <RefreshCw className={`w-4 h-4 mr-2 ${isUpdating ? "animate-spin" : ""}`} />
@@ -144,78 +129,38 @@ export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
       <div>
         <h3 className="text-lg font-semibold mb-3">Dólar Estadounidense (USD)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {exchangeRates
-            .filter((rate) => rate.currency === "USD")
-            .map((rate, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                    <span>{rate.name}</span>
-                    <Badge variant={rate.type === "Blue" ? "default" : "secondary"} className="text-xs">
-                      {rate.type}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="text-3xl font-bold">${rate.rate.toFixed(2)}</div>
-                      <div className="text-xs text-muted-foreground mt-1">ARS por USD</div>
-                    </div>
-                    <div
-                      className={`flex items-center text-sm font-medium ${
-                        rate.change >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {rate.change >= 0 ? (
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 mr-1" />
-                      )}
-                      {Math.abs(rate.change).toFixed(2)}%
-                    </div>
+          {exchangeRates.map((rate, index) => (
+            <Card key={index} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+                  <span>{rate.name}</span>
+                  <Badge variant={rate.type === "Blue" ? "default" : "secondary"} className="text-xs">
+                    {rate.type}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">${rate.rate.toFixed(2)}</div>
+                    <div className="text-xs text-muted-foreground mt-1">ARS por USD</div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-        </div>
-      </div>
-
-      {/* Other Currencies */}
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Otras Monedas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {exchangeRates
-            .filter((rate) => rate.currency !== "USD")
-            .map((rate, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{rate.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-2xl font-bold">
-                      {getCurrencyIcon(rate.currency)}
-                      {rate.rate.toFixed(2)}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {rate.currency}
-                    </Badge>
+                  <div
+                    className={`flex items-center text-sm font-medium ${
+                      rate.change >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {rate.change >= 0 ? (
+                      <TrendingUp className="w-4 h-4 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 mr-1" />
+                    )}
+                    {Math.abs(rate.change).toFixed(2)}%
                   </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">ARS por {rate.currency}</span>
-                    <span
-                      className={`flex items-center font-medium ${
-                        rate.change >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {rate.change >= 0 ? "+" : ""}
-                      {rate.change.toFixed(2)}%
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
@@ -229,47 +174,27 @@ export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
             <div>
               <h4 className="font-semibold mb-3 text-sm">Desde ARS</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>ARS 100,000</span>
-                  <span className="font-medium">
-                    ≈ ${(100000 / (exchangeRates.find((r) => r.type === "Blue")?.rate || 1050)).toFixed(2)} USD (Blue)
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>ARS 100,000</span>
-                  <span className="font-medium">
-                    ≈ €{(100000 / (exchangeRates.find((r) => r.currency === "EUR")?.rate || 1150)).toFixed(2)} EUR
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>ARS 100,000</span>
-                  <span className="font-medium">
-                    ≈ R${(100000 / (exchangeRates.find((r) => r.currency === "BRL")?.rate || 210)).toFixed(2)} BRL
-                  </span>
-                </div>
+                {exchangeRates.map((rate, index) => (
+                  <div key={index} className="flex justify-between p-2 bg-muted rounded">
+                    <span>ARS 100,000</span>
+                    <span className="font-medium">
+                      ≈ ${(100000 / rate.rate).toFixed(2)} USD ({rate.type})
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
             <div>
               <h4 className="font-semibold mb-3 text-sm">Hacia ARS</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>$100 USD (Blue)</span>
-                  <span className="font-medium">
-                    ≈ ${((exchangeRates.find((r) => r.type === "Blue")?.rate || 1050) * 100).toLocaleString()} ARS
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>€100 EUR</span>
-                  <span className="font-medium">
-                    ≈ ${((exchangeRates.find((r) => r.currency === "EUR")?.rate || 1150) * 100).toLocaleString()} ARS
-                  </span>
-                </div>
-                <div className="flex justify-between p-2 bg-muted rounded">
-                  <span>R$100 BRL</span>
-                  <span className="font-medium">
-                    ≈ ${((exchangeRates.find((r) => r.currency === "BRL")?.rate || 210) * 100).toLocaleString()} ARS
-                  </span>
-                </div>
+                {exchangeRates.map((rate, index) => (
+                  <div key={index} className="flex justify-between p-2 bg-muted rounded">
+                    <span>$100 USD ({rate.type})</span>
+                    <span className="font-medium">
+                      ≈ ${(rate.rate * 100).toLocaleString("es-AR")} ARS
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

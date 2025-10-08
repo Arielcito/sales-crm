@@ -71,10 +71,16 @@ export function useUpdateDeal() {
         queryClient.setQueryData(["deals", id], context.previousDeal)
       }
     },
-    onSuccess: (updatedDeal: Deal) => {
+    onSuccess: (updatedDeal: Deal, { data }) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] })
       queryClient.invalidateQueries({ queryKey: ["deals", updatedDeal.id] })
       queryClient.invalidateQueries({ queryKey: ["deal-history", updatedDeal.id] })
+
+      if (data.stageId) {
+        toast.success("Negocio actualizado", {
+          description: "El negocio se movió exitosamente a la nueva etapa."
+        })
+      }
     },
   })
 }

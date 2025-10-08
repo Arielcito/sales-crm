@@ -1,8 +1,10 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Spinner } from "@/components/ui/spinner"
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +33,7 @@ export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const { data: currentUser, isLoading } = useCurrentUser()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const navigationItems: NavigationItem[] = [
     { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
@@ -45,8 +48,14 @@ export function AppSidebar() {
   }
 
   const handleLogout = async () => {
-    await signOut()
-    router.push("/auth/signin")
+    try {
+      setIsLoggingOut(true)
+      await signOut()
+      router.push("/auth/signin")
+    } catch (error) {
+      console.error("[AppSidebar] Error during logout:", error)
+      setIsLoggingOut(false)
+    }
   }
 
   const getActiveView = (): ViewType | null => {
@@ -87,6 +96,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       onClick={() => handleViewChange(item.id)}
                       isActive={isActive}
+                      disabled={isLoggingOut}
                       className={`h-11 px-4 transition-all duration-200 ${
                         isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
@@ -144,10 +154,20 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className="w-full justify-start h-10 text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200"
+          disabled={isLoggingOut}
+          className="w-full justify-start h-10 text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors duration-200 disabled:opacity-50"
         >
-          <LogOut className="w-4 h-4 mr-3" />
-          <span className="text-sm">Cerrar Sesión</span>
+          {isLoggingOut ? (
+            <>
+              <Spinner size="sm" className="w-4 h-4 mr-3" />
+              <span className="text-sm">Cerrando sesión...</span>
+            </>
+          ) : (
+            <>
+              <LogOut className="w-4 h-4 mr-3" />
+              <span className="text-sm">Cerrar Sesión</span>
+            </>
+          )}
         </Button>
       </SidebarFooter>
     </Sidebar>

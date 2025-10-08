@@ -6,6 +6,7 @@ import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 
 export default function SignInPage() {
@@ -83,7 +84,14 @@ export default function SignInPage() {
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Spinner size="sm" />
+                  <span>Iniciando sesión...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground border-t border-border pt-4">

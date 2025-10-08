@@ -52,7 +52,26 @@ export function useUpdateCompany() {
         body: JSON.stringify(data),
       })
     },
-    onSuccess: () => {
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["companies"] })
+
+      const previousCompanies = queryClient.getQueryData<Company[]>(["companies"])
+
+      queryClient.setQueryData<Company[]>(["companies"], (old) => {
+        if (!old) return old
+        return old.map((company) =>
+          company.id === id ? { ...company, ...data } : company
+        )
+      })
+
+      return { previousCompanies }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousCompanies) {
+        queryClient.setQueryData(["companies"], context.previousCompanies)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
     },
   })
@@ -67,7 +86,24 @@ export function useDeleteCompany() {
         method: "DELETE",
       })
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["companies"] })
+
+      const previousCompanies = queryClient.getQueryData<Company[]>(["companies"])
+
+      queryClient.setQueryData<Company[]>(["companies"], (old) => {
+        if (!old) return old
+        return old.filter((company) => company.id !== id)
+      })
+
+      return { previousCompanies }
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previousCompanies) {
+        queryClient.setQueryData(["companies"], context.previousCompanies)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
     },
   })

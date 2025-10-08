@@ -74,7 +74,7 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
             email: formData.email,
             role: formData.role,
             level: Number.parseInt(formData.level),
-            managerId: formData.managerId || null,
+            managerId: formData.managerId && formData.managerId !== "none" ? formData.managerId : null,
             teamId: formData.teamId || null,
           },
         })
@@ -85,7 +85,7 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
           password: formData.password,
           role: formData.role,
           level: Number.parseInt(formData.level),
-          managerId: formData.managerId || null,
+          managerId: formData.managerId && formData.managerId !== "none" ? formData.managerId : null,
           teamId: formData.teamId || null,
         })
       }
@@ -178,14 +178,14 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
           <div>
             <Label htmlFor="manager">Gerente</Label>
             <Select
-              value={formData.managerId}
-              onValueChange={(value) => setFormData({ ...formData, managerId: value })}
+              value={formData.managerId || "none"}
+              onValueChange={(value) => setFormData({ ...formData, managerId: value === "none" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar gerente (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin gerente</SelectItem>
+                <SelectItem value="none">Sin gerente</SelectItem>
                 {availableManagers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name} - Nivel {user.level} ({user.role})

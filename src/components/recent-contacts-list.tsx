@@ -1,11 +1,19 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRecentContacts } from "@/hooks/use-recent-activity"
 import { User, Mail, Phone } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { useRouter } from "next/navigation"
 
 export function RecentContactsList() {
   const { data: contacts, isLoading, error } = useRecentContacts(5)
+  const router = useRouter()
+
+  const handleContactClick = (contactId: string) => {
+    router.push(`/companies?contactId=${contactId}`)
+  }
 
   if (isLoading) {
     return (
@@ -68,7 +76,11 @@ export function RecentContactsList() {
       <CardContent>
         <div className="space-y-4">
           {contacts.map((contact) => (
-            <div key={contact.id} className="flex items-start space-x-3">
+            <div
+              key={contact.id}
+              onClick={() => handleContactClick(contact.id)}
+              className="flex items-start space-x-3 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors"
+            >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <User className="h-5 w-5 text-primary" />
               </div>

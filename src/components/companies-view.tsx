@@ -13,6 +13,7 @@ import { NewCompanyModal } from "@/components/new-company-modal"
 import { NewContactModal } from "@/components/new-contact-modal"
 import { EditCompanyModal } from "@/components/edit-company-modal"
 import { EditContactModal } from "@/components/edit-contact-modal"
+import { CompaniesSkeleton } from "@/components/companies-skeleton"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,16 +96,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   }
 
   if (companiesLoading || contactsLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Empresas y Contactos</h1>
-            <p className="text-muted-foreground mt-1">Cargando...</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <CompaniesSkeleton />
   }
 
   return (

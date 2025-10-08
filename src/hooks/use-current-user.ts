@@ -21,6 +21,8 @@ export function useCurrentUser() {
       return result.data as User
     },
     enabled: !!session?.user?.id && !sessionPending,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   })
 
   return {

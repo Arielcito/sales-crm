@@ -5,6 +5,7 @@ import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Spinner } from "@/components/ui/spinner"
 import { Toaster } from "sonner"
 
 export default function ProtectedLayout({
@@ -24,7 +25,10 @@ export default function ProtectedLayout({
   if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Cargando...</p>
+        <div className="flex flex-col items-center gap-4">
+          <Spinner size="lg" />
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
       </div>
     )
   }

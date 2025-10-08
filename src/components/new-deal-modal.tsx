@@ -13,7 +13,9 @@ import { useContacts } from "@/hooks/use-contacts"
 import { useCreateDeal } from "@/hooks/use-deals"
 import { useDealStages } from "@/hooks/use-deal-stages"
 import { useUsers } from "@/hooks/use-users"
+import { useExchangeRate, useConvertCurrency } from "@/hooks/use-exchange-rate"
 import type { User, Currency } from "@/lib/types"
+import { apiClient } from "@/lib/api/client"
 
 interface NewDealModalProps {
   currentUser: User
@@ -27,6 +29,8 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
   const { data: dealStages = [] } = useDealStages()
   const { data: users = [] } = useUsers()
   const createDealMutation = useCreateDeal()
+  const { data: exchangeRate } = useExchangeRate()
+  const { convertAmount } = useConvertCurrency()
 
   const [formData, setFormData] = useState({
     title: "",
@@ -47,10 +51,37 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
     e.preventDefault()
 
     try {
+      const amount = Number.parseFloat(formData.amountUsd)
+
+      if (!exchangeRate?.usdToArs) {
+        console.error("[NewDealModal] No exchange rate available")
+        return
+      }
+
+      console.log("[NewDealModal] Creating deal with exchange rate:", exchangeRate.usdToArs)
+
+      const savedExchangeRate = await apiClient<{ id: string }>("/api/exchange-rate", {
+        method: "POST",
+        body: JSON.stringify({ usdToArs: exchangeRate.usdToArs }),
+      })
+
+      console.log("[NewDealModal] Exchange rate saved with ID:", savedExchangeRate.id)
+
+      const amountUsd = formData.currency === "USD"
+        ? amount
+        : convertAmount(amount, "ARS", "USD")
+
+      const amountArs = formData.currency === "ARS"
+        ? amount
+        : convertAmount(amount, "USD", "ARS")
+
+      console.log("[NewDealModal] Amounts - USD:", amountUsd, "ARS:", amountArs)
+
       await createDealMutation.mutateAsync({
         ...formData,
-        amountUsd: formData.currency === "USD" ? Number.parseFloat(formData.amountUsd) : undefined,
-        amountArs: formData.currency === "ARS" ? Number.parseFloat(formData.amountUsd) : undefined,
+        amountUsd,
+        amountArs,
+        exchangeRateId: savedExchangeRate.id,
         expectedCloseDate: formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined,
       })
 

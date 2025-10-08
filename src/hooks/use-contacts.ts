@@ -51,7 +51,26 @@ export function useUpdateContact() {
         body: JSON.stringify(data),
       })
     },
-    onSuccess: () => {
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["contacts"] })
+
+      const previousContacts = queryClient.getQueryData<Contact[]>(["contacts"])
+
+      queryClient.setQueryData<Contact[]>(["contacts"], (old) => {
+        if (!old) return old
+        return old.map((contact) =>
+          contact.id === id ? { ...contact, ...data } : contact
+        )
+      })
+
+      return { previousContacts }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousContacts) {
+        queryClient.setQueryData(["contacts"], context.previousContacts)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
   })
@@ -66,7 +85,24 @@ export function useDeleteContact() {
         method: "DELETE",
       })
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["contacts"] })
+
+      const previousContacts = queryClient.getQueryData<Contact[]>(["contacts"])
+
+      queryClient.setQueryData<Contact[]>(["contacts"], (old) => {
+        if (!old) return old
+        return old.filter((contact) => contact.id !== id)
+      })
+
+      return { previousContacts }
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previousContacts) {
+        queryClient.setQueryData(["contacts"], context.previousContacts)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
   })

@@ -1,11 +1,19 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRecentDeals } from "@/hooks/use-recent-activity"
 import { DollarSign, TrendingUp } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { useRouter } from "next/navigation"
 
 export function RecentDealsList() {
   const { data: deals, isLoading, error } = useRecentDeals(5)
+  const router = useRouter()
+
+  const handleDealClick = (dealId: string) => {
+    router.push(`/kanban?dealId=${dealId}`)
+  }
 
   if (isLoading) {
     return (
@@ -74,7 +82,11 @@ export function RecentDealsList() {
             const currencySymbol = deal.currency === "USD" ? "$" : "$"
 
             return (
-              <div key={deal.id} className="flex items-start space-x-3">
+              <div
+                key={deal.id}
+                onClick={() => handleDealClick(deal.id)}
+                className="flex items-start space-x-3 cursor-pointer hover:bg-accent/50 p-2 rounded-lg transition-colors"
+              >
                 <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
                   <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>

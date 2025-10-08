@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, and, or, isNull } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
 import type { UpdateUserInput } from "@/lib/schemas/user"
@@ -7,7 +7,9 @@ import type { User } from "@/lib/types"
 export async function getAllUsers(): Promise<User[]> {
   console.log("[user.service] Fetching all users")
 
-  const result = await db.select().from(users)
+  const result = await db.select().from(users).where(
+    or(eq(users.banned, false), isNull(users.banned))
+  )
 
   console.log("[user.service] Found users:", result.length)
 
@@ -26,7 +28,12 @@ export async function getAllUsers(): Promise<User[]> {
 export async function getUserById(id: string): Promise<User | null> {
   console.log("[user.service] Fetching user by id:", id)
 
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1)
+  const result = await db.select().from(users).where(
+    and(
+      eq(users.id, id),
+      or(eq(users.banned, false), isNull(users.banned))
+    )
+  ).limit(1)
 
   if (result.length === 0) {
     console.log("[user.service] User not found")

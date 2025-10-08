@@ -74,7 +74,38 @@ export function useUpdateUser() {
 
       return result.data as User
     },
-    onSuccess: () => {
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["users"] })
+      await queryClient.cancelQueries({ queryKey: ["visible-users"] })
+
+      const previousUsers = queryClient.getQueryData<User[]>(["users"])
+      const previousVisibleUsers = queryClient.getQueryData<User[]>(["visible-users"])
+
+      queryClient.setQueryData<User[]>(["users"], (old) => {
+        if (!old) return old
+        return old.map((user) =>
+          user.id === id ? { ...user, ...data } : user
+        )
+      })
+
+      queryClient.setQueryData<User[]>(["visible-users"], (old) => {
+        if (!old) return old
+        return old.map((user) =>
+          user.id === id ? { ...user, ...data } : user
+        )
+      })
+
+      return { previousUsers, previousVisibleUsers }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["users"], context.previousUsers)
+      }
+      if (context?.previousVisibleUsers) {
+        queryClient.setQueryData(["visible-users"], context.previousVisibleUsers)
+      }
+    },
+    onSettled: () => {
       console.log("[useUpdateUser] User updated, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
@@ -101,7 +132,34 @@ export function useDeleteUser() {
 
       return result.data
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["users"] })
+      await queryClient.cancelQueries({ queryKey: ["visible-users"] })
+
+      const previousUsers = queryClient.getQueryData<User[]>(["users"])
+      const previousVisibleUsers = queryClient.getQueryData<User[]>(["visible-users"])
+
+      queryClient.setQueryData<User[]>(["users"], (old) => {
+        if (!old) return old
+        return old.filter((user) => user.id !== id)
+      })
+
+      queryClient.setQueryData<User[]>(["visible-users"], (old) => {
+        if (!old) return old
+        return old.filter((user) => user.id !== id)
+      })
+
+      return { previousUsers, previousVisibleUsers }
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previousUsers) {
+        queryClient.setQueryData(["users"], context.previousUsers)
+      }
+      if (context?.previousVisibleUsers) {
+        queryClient.setQueryData(["visible-users"], context.previousVisibleUsers)
+      }
+    },
+    onSettled: () => {
       console.log("[useDeleteUser] User deleted, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })

@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import type { Deal, User, Currency } from "@/lib/types"
 import { DealModal } from "./deal-modal"
 import { CurrencyToggle } from "./currency-toggle"
@@ -23,31 +23,52 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ currentUser, stages, companies, contacts, users }: KanbanBoardProps) {
   const { data: deals = [], isLoading } = useDeals()
-  const { mutate: updateDeal } = useUpdateDeal()
+  const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [currency, setCurrency] = useState<Currency>("USD")
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
   const [showNewDealModal, setShowNewDealModal] = useState(false)
+  const [optimisticDealId, setOptimisticDealId] = useState<string | null>(null)
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null)
 
   const handleDragStart = (e: React.DragEvent, deal: Deal) => {
     setDraggedDeal(deal)
     e.dataTransfer.effectAllowed = "move"
   }
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, stageId: string) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
+    setDragOverStage(stageId)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverStage(null)
   }
 
   const handleDrop = (e: React.DragEvent, newStageId: string) => {
     e.preventDefault()
-    if (!draggedDeal || draggedDeal.stageId === newStageId) return
+    setDragOverStage(null)
 
-    updateDeal({
-      id: draggedDeal.id,
-      data: { stageId: newStageId }
-    })
+    if (!draggedDeal || draggedDeal.stageId === newStageId) {
+      setDraggedDeal(null)
+      return
+    }
+
+    setOptimisticDealId(draggedDeal.id)
+
+    updateDeal(
+      {
+        id: draggedDeal.id,
+        data: { stageId: newStageId }
+      },
+      {
+        onSettled: () => {
+          setOptimisticDealId(null)
+        }
+      }
+    )
 
     setDraggedDeal(null)
   }
@@ -104,11 +125,16 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                 return sum + amount
               }, 0)
 
+              const isDropTarget = dragOverStage === stage.id
+
               return (
                 <div
                   key={stage.id}
-                  className="nexus-card flex flex-col w-80 flex-shrink-0 bg-muted/30"
-                  onDragOver={handleDragOver}
+                  className={`nexus-card flex flex-col w-80 flex-shrink-0 bg-muted/30 transition-all duration-200 ${
+                    isDropTarget ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : ""
+                  }`}
+                  onDragOver={(e) => handleDragOver(e, stage.id)}
+                  onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, stage.id)}
                   role="button"
                   tabIndex={0}
@@ -144,16 +170,28 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                         const amount = deal.currency === "USD"
                           ? (deal.amountUsd || 0)
                           : (deal.amountArs || 0)
+                        const isBeingDragged = draggedDeal?.id === deal.id
+                        const isOptimistic = optimisticDealId === deal.id
+                        const isDealUpdating = isUpdating && isOptimistic
 
                         return (
                           <Card
                             key={deal.id}
-                            className="cursor-pointer border-0 shadow-sm hover:shadow-md transition-all duration-200 bg-card"
-                            draggable
+                            className={`cursor-pointer border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card ${
+                              isBeingDragged ? "opacity-40 scale-95" : ""
+                            } ${
+                              isOptimistic ? "ring-2 ring-primary/50 animate-pulse" : ""
+                            }`}
+                            draggable={!isDealUpdating}
                             onDragStart={(e) => handleDragStart(e, deal)}
-                            onClick={() => setSelectedDeal(deal)}
+                            onClick={() => !isBeingDragged && setSelectedDeal(deal)}
                           >
-                            <CardContent className="p-4">
+                            <CardContent className="p-4 relative">
+                              {isDealUpdating && (
+                                <div className="absolute top-2 right-2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                </div>
+                              )}
                               <div className="space-y-3">
                                 <h4 className="font-semibold text-sm leading-tight line-clamp-2">
                                   {deal.title}
