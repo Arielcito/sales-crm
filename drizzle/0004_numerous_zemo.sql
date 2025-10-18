@@ -1,0 +1,2 @@
+ALTER TABLE "organizationBranding" ALTER COLUMN "primaryColor" SET DEFAULT '217 91% 60%';--> statement-breakpoint
+ALTER TABLE "organizationBranding" ALTER COLUMN "secondaryColor" SET DEFAULT '214 32% 91%';

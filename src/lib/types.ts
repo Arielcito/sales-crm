@@ -106,7 +106,7 @@ export interface DealHistory {
   createdAt: Date;
 }
 
-export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "currency";
+export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "currency" | "settings/branding";
 
 export interface NavigationItem {
   id: ViewType;

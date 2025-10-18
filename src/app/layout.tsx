@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
+import { BrandingProvider } from "@/providers/branding-provider";
 
 export const metadata: Metadata = {
   title: "Sales CRM",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <BrandingProvider>{children}</BrandingProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -24,15 +24,18 @@ import {
   LogOut,
   ChevronRight,
   Building2,
+  Palette,
 } from "lucide-react"
 import { signOut } from "@/lib/auth-client"
 import { useCurrentUser } from "@/hooks/use-current-user"
+import { useBrandingContext } from "@/providers/branding-provider"
 import type { NavigationItem, ViewType } from "@/lib/types"
 
 export function AppSidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const { data: currentUser, isLoading } = useCurrentUser()
+  const { name: brandName, logoUrl } = useBrandingContext()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const navigationItems: NavigationItem[] = [
@@ -40,6 +43,7 @@ export function AppSidebar() {
     { id: "kanban", label: "Pipeline de Ventas", icon: Kanban },
     { id: "companies", label: "Empresas y Contactos", icon: Building2 },
     { id: "users", label: "Gestión de Usuarios", icon: Users, levelRequired: 1 },
+    { id: "settings/branding", label: "Personalización", icon: Palette, levelRequired: 1 },
     { id: "currency", label: "Cotizaciones", icon: Settings },
   ]
 
@@ -69,11 +73,17 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="p-6 border-b border-sidebar-border">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-            <div className="w-5 h-5 bg-primary-foreground rounded-md"></div>
-          </div>
+          {logoUrl ? (
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+              <img src={logoUrl} alt={brandName} className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-5 h-5 bg-primary-foreground rounded-md"></div>
+            </div>
+          )}
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">CRM Pro</h1>
+            <h1 className="text-lg font-bold text-sidebar-foreground">{brandName}</h1>
             <p className="text-xs text-sidebar-foreground/60">Sales Pipeline</p>
           </div>
         </div>

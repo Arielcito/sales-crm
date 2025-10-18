@@ -168,3 +168,17 @@ export const dealHistory = pgTable("dealHistory", {
   notes: text("notes"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
+
+export const organizationBranding = pgTable("organizationBranding", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organizationId"),
+  name: text("name").notNull().default("SalPip"),
+  logoUrl: text("logoUrl"),
+  primaryColor: varchar("primaryColor", { length: 50 }).notNull().default("217 91% 60%"),
+  secondaryColor: varchar("secondaryColor", { length: 50 }).notNull().default("214 32% 91%"),
+  accentColor: varchar("accentColor", { length: 50 }).notNull().default("142 71% 45%"),
+  sidebarColor: varchar("sidebarColor", { length: 50 }).notNull().default("215 25% 27%"),
+  createdBy: uuid("createdBy").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
