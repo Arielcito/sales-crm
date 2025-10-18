@@ -2,11 +2,28 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { db } from "@/lib/db"
-import { deals, contacts } from "@/lib/db/schema"
-import { inArray, sql } from "drizzle-orm"
+import { deals, dealStages, users, teams } from "@/lib/db/schema"
+import { inArray, sql, and, gte, lte, isNull } from "drizzle-orm"
 import { getUserById, getUsersByLevel } from "@/lib/services/user.service"
+import type { DashboardStatsExtended, StageStats, TeamStats } from "@/lib/types"
 
-export async function GET(_request: NextRequest) {
+const OPEN_NEGOTIATIONS_STAGES = [
+  "Oportunidad identificada",
+  "Cotización generada y enviada",
+  "Aprobación pendiente",
+  "Orden de compra generada"
+]
+
+const ONGOING_PROJECTS_STAGES = [
+  "Anticipo pagado",
+  "Proyectos en curso",
+  "Facturación final"
+]
+
+const FINISHED_PROJECTS_STAGE = "Proyectos terminados"
+const LOST_PROJECTS_STAGE = "Proyectos perdidos"
+
+export async function GET(request: NextRequest) {
   try {
     console.log("[API /dashboard/stats] GET request received")
 
@@ -30,61 +47,197 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    console.log("[API /dashboard/stats] Fetching stats for user level:", currentUser.level)
+    const searchParams = request.nextUrl.searchParams
+    const fromDate = searchParams.get("from")
+    const toDate = searchParams.get("to")
+    const currency = searchParams.get("currency") || "USD"
+
+    console.log("[API /dashboard/stats] Filters - from:", fromDate, "to:", toDate, "currency:", currency)
 
     const visibleUsers = await getUsersByLevel(currentUser)
     const visibleUserIds = visibleUsers.map(u => u.id)
 
     console.log("[API /dashboard/stats] Visible users:", visibleUserIds.length)
 
-    const [contactsCount, dealsData, dealsByStageData] = await Promise.all([
-      db.select({ count: sql<number>`COALESCE(count(*), 0)::int` })
-        .from(contacts)
-        .where(visibleUserIds.length > 0 ? inArray(contacts.userId, visibleUserIds) : sql`1=0`),
+    const dateConditions = []
+    if (fromDate) {
+      dateConditions.push(gte(deals.createdAt, new Date(fromDate)))
+    }
+    if (toDate) {
+      dateConditions.push(lte(deals.createdAt, new Date(toDate)))
+    }
 
-      db.select({
-        count: sql<number>`COALESCE(count(*), 0)::int`,
-        totalUsd: sql<number>`COALESCE(sum(COALESCE(${deals.amountUsd}::numeric, 0)), 0)`,
-        totalArs: sql<number>`COALESCE(sum(COALESCE(${deals.amountArs}::numeric, 0)), 0)`,
-      })
-        .from(deals)
-        .where(visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`),
+    const baseWhere = dateConditions.length > 0
+      ? and(
+          visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`,
+          ...dateConditions
+        )
+      : (visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`)
 
-      db.select({
+    const allStages = await db.select().from(dealStages).orderBy(dealStages.order)
+
+    const amountField = currency === "USD" ? deals.amountUsd : deals.amountArs
+
+    const dealsWithStagesAndTeams = await db
+      .select({
+        dealId: deals.id,
+        userId: deals.userId,
+        amount: amountField,
+        stageName: dealStages.name,
         stageId: deals.stageId,
-        count: sql<number>`COALESCE(count(*), 0)::int`,
-        totalUsd: sql<number>`COALESCE(sum(COALESCE(${deals.amountUsd}::numeric, 0)), 0)`,
+        teamId: users.teamId,
+        userName: users.name,
       })
-        .from(deals)
-        .where(visibleUserIds.length > 0 ? inArray(deals.userId, visibleUserIds) : sql`1=0`)
-        .groupBy(deals.stageId),
-    ])
+      .from(deals)
+      .leftJoin(dealStages, sql`${deals.stageId} = ${dealStages.id}`)
+      .leftJoin(users, sql`${deals.userId} = ${users.id}`)
+      .where(baseWhere)
 
-    const totalContacts = Number(contactsCount[0]?.count) || 0
-    const totalDeals = Number(dealsData[0]?.count) || 0
-    const totalRevenueUsd = Number(dealsData[0]?.totalUsd) || 0
-    const totalRevenueArs = Number(dealsData[0]?.totalArs) || 0
+    const teamData = await db
+      .select({
+        teamId: teams.id,
+        teamName: teams.name,
+      })
+      .from(teams)
 
-    const dealsByStage: Record<string, number> = {}
-    const revenueByStage: Record<string, number> = {}
+    const teamMap = new Map(teamData.map(t => [t.teamId, t.teamName]))
 
-    dealsByStageData.forEach(stage => {
-      dealsByStage[stage.stageId] = Number(stage.count) || 0
-      revenueByStage[stage.stageId] = Number(stage.totalUsd) || 0
+    let openNegotiationsCount = 0
+    let openNegotiationsAmount = 0
+    let ongoingProjectsCount = 0
+    let ongoingProjectsAmount = 0
+    let finishedProjectsCount = 0
+    let finishedProjectsAmount = 0
+    let lostProjectsCount = 0
+    let lostProjectsAmount = 0
+
+    const stageStatsMap = new Map<string, { count: number; amount: number; name: string }>()
+    const openNegTeamMap = new Map<string | null, { count: number; amount: number; name: string }>()
+    const ongoingProjTeamMap = new Map<string | null, { count: number; amount: number; name: string }>()
+
+    allStages.forEach(stage => {
+      stageStatsMap.set(stage.id, { count: 0, amount: 0, name: stage.name })
     })
 
-    console.log("[API /dashboard/stats] Stats calculated - Contacts:", totalContacts, "Deals:", totalDeals)
+    for (const deal of dealsWithStagesAndTeams) {
+      const amount = Number(deal.amount) || 0
+      const stageName = deal.stageName || ""
+
+      if (stageStatsMap.has(deal.stageId)) {
+        const stats = stageStatsMap.get(deal.stageId)!
+        stats.count += 1
+        stats.amount += amount
+      }
+
+      if (OPEN_NEGOTIATIONS_STAGES.includes(stageName)) {
+        openNegotiationsCount += 1
+        openNegotiationsAmount += amount
+
+        const teamKey = deal.teamId || null
+        if (!openNegTeamMap.has(teamKey)) {
+          const teamName = teamKey ? (teamMap.get(teamKey) || "Sin equipo") : "Sin equipo"
+          openNegTeamMap.set(teamKey, { count: 0, amount: 0, name: teamName })
+        }
+        const teamStats = openNegTeamMap.get(teamKey)!
+        teamStats.count += 1
+        teamStats.amount += amount
+
+        if (currentUser.level === 2) {
+          const userKey = deal.userId
+          if (!openNegTeamMap.has(userKey)) {
+            openNegTeamMap.set(userKey, { count: 0, amount: 0, name: deal.userName || "Usuario" })
+          }
+          const userStats = openNegTeamMap.get(userKey)!
+          userStats.count += 1
+          userStats.amount += amount
+        }
+      }
+
+      if (ONGOING_PROJECTS_STAGES.includes(stageName)) {
+        ongoingProjectsCount += 1
+        ongoingProjectsAmount += amount
+
+        const teamKey = deal.teamId || null
+        if (!ongoingProjTeamMap.has(teamKey)) {
+          const teamName = teamKey ? (teamMap.get(teamKey) || "Sin equipo") : "Sin equipo"
+          ongoingProjTeamMap.set(teamKey, { count: 0, amount: 0, name: teamName })
+        }
+        const teamStats = ongoingProjTeamMap.get(teamKey)!
+        teamStats.count += 1
+        teamStats.amount += amount
+
+        if (currentUser.level === 2) {
+          const userKey = deal.userId
+          if (!ongoingProjTeamMap.has(userKey)) {
+            ongoingProjTeamMap.set(userKey, { count: 0, amount: 0, name: deal.userName || "Usuario" })
+          }
+          const userStats = ongoingProjTeamMap.get(userKey)!
+          userStats.count += 1
+          userStats.amount += amount
+        }
+      }
+
+      if (stageName === FINISHED_PROJECTS_STAGE) {
+        finishedProjectsCount += 1
+        finishedProjectsAmount += amount
+      }
+
+      if (stageName === LOST_PROJECTS_STAGE) {
+        lostProjectsCount += 1
+        lostProjectsAmount += amount
+      }
+    }
+
+    const stageStats: StageStats[] = Array.from(stageStatsMap.entries()).map(([stageId, stats]) => ({
+      stageId,
+      stageName: stats.name,
+      count: stats.count,
+      totalAmount: stats.amount,
+    }))
+
+    const openNegTeamStats: TeamStats[] = Array.from(openNegTeamMap.entries()).map(([teamId, stats]) => ({
+      teamId,
+      teamName: stats.name,
+      count: stats.count,
+      totalAmount: stats.amount,
+    }))
+
+    const ongoingProjTeamStats: TeamStats[] = Array.from(ongoingProjTeamMap.entries()).map(([teamId, stats]) => ({
+      teamId,
+      teamName: stats.name,
+      count: stats.count,
+      totalAmount: stats.amount,
+    }))
+
+    const result: DashboardStatsExtended = {
+      openNegotiations: {
+        count: openNegotiationsCount,
+        amount: openNegotiationsAmount,
+      },
+      ongoingProjects: {
+        count: ongoingProjectsCount,
+        amount: ongoingProjectsAmount,
+      },
+      finishedProjects: {
+        count: finishedProjectsCount,
+        amount: finishedProjectsAmount,
+      },
+      lostProjects: {
+        count: lostProjectsCount,
+        amount: lostProjectsAmount,
+      },
+      stageStats,
+      teamStats: {
+        openNegotiations: openNegTeamStats,
+        ongoingProjects: ongoingProjTeamStats,
+      },
+    }
+
+    console.log("[API /dashboard/stats] Stats calculated successfully")
 
     return NextResponse.json({
       success: true,
-      data: {
-        totalContacts,
-        totalDeals,
-        totalRevenueUsd,
-        totalRevenueArs,
-        dealsByStage,
-        revenueByStage,
-      }
+      data: result,
     })
   } catch (error) {
     console.error("[API /dashboard/stats] Error:", error)

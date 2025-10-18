@@ -55,11 +55,12 @@ export async function getUserById(id: string): Promise<User | null> {
 }
 
 export async function getUsersByLevel(currentUser: User): Promise<User[]> {
-  console.log("[user.service] Fetching users by level for user:", currentUser.id)
+  console.log("[user.service] Fetching users by level for user:", currentUser.id, "teamId:", currentUser.teamId)
 
   const allUsers = await getAllUsers()
 
   if (currentUser.level === 1) {
+    console.log("[user.service] Level 1 user, returning all users")
     return allUsers
   }
 
@@ -77,11 +78,38 @@ export async function getUsersByLevel(currentUser: User): Promise<User[]> {
 
   addSubordinates(currentUser.id)
 
+  if (currentUser.teamId) {
+    const teamUsers = allUsers.filter(u => u.teamId === currentUser.teamId && u.level >= currentUser.level)
+    teamUsers.forEach(u => visibleUserIds.add(u.id))
+  }
+
   const visibleUsers = allUsers.filter(u => visibleUserIds.has(u.id))
 
   console.log("[user.service] Visible users:", visibleUsers.length)
 
   return visibleUsers
+}
+
+export async function getUsersByTeam(currentUser: User): Promise<User[]> {
+  console.log("[user.service] Fetching team users for user:", currentUser.id, "teamId:", currentUser.teamId)
+
+  const allUsers = await getAllUsers()
+
+  if (currentUser.level === 1) {
+    return allUsers
+  }
+
+  if (!currentUser.teamId) {
+    return [currentUser]
+  }
+
+  const teamUsers = allUsers.filter(u =>
+    u.teamId === currentUser.teamId && u.level >= currentUser.level
+  )
+
+  console.log("[user.service] Team users:", teamUsers.length)
+
+  return teamUsers
 }
 
 export async function validateManagerAssignment(userId: string, managerId: string | null, userLevel: number): Promise<{ valid: boolean; error?: string }> {

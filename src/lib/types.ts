@@ -31,6 +31,8 @@ export interface Company {
   employeeCount?: number | null;
   notes?: string | null;
   createdBy: string;
+  assignedTeamId?: string | null;
+  isGlobal: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +59,7 @@ export interface DealStage {
   isDefault: boolean;
   isActive: boolean;
   createdBy?: string | null;
+  companyOwnerId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,11 +109,65 @@ export interface DealHistory {
   createdAt: Date;
 }
 
-export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "currency" | "settings/branding";
+export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "teams" | "currency" | "settings/branding";
 
 export interface NavigationItem {
   id: ViewType;
   label: string;
   icon: LucideIcon;
   levelRequired?: number;
+}
+
+export interface StageStats {
+  stageId: string
+  stageName: string
+  count: number
+  totalAmount: number
+}
+
+export interface TeamStats {
+  teamId: string | null
+  teamName: string
+  count: number
+  totalAmount: number
+}
+
+export interface CompanyRequest {
+  id: string
+  requestedBy: string
+  companyName: string
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+  industry?: string | null
+  notes?: string | null
+  status: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DashboardStatsExtended {
+  openNegotiations: {
+    count: number
+    amount: number
+  }
+  ongoingProjects: {
+    count: number
+    amount: number
+  }
+  finishedProjects: {
+    count: number
+    amount: number
+  }
+  lostProjects: {
+    count: number
+    amount: number
+  }
+  stageStats: StageStats[]
+  teamStats: {
+    openNegotiations: TeamStats[]
+    ongoingProjects: TeamStats[]
+  }
 }

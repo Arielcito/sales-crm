@@ -19,9 +19,9 @@ function hslToHex(hslString: string): string {
   const match = hslString.match(/^(\d+)\s+(\d+)%\s+(\d+)%$/)
   if (!match) return hslString
 
-  let h = parseInt(match[1])
-  let s = parseInt(match[2]) / 100
-  let l = parseInt(match[3]) / 100
+  const h = parseInt(match[1])
+  const s = parseInt(match[2]) / 100
+  const l = parseInt(match[3]) / 100
 
   const k = (n: number) => (n + h / 30) % 12
   const a = s * Math.min(l, 1 - l)

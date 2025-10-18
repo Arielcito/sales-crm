@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import { companies } from "@/lib/db/schema"
-import { eq, desc } from "drizzle-orm"
-import type { Company } from "@/lib/types"
+import { eq, desc, or } from "drizzle-orm"
+import type { Company, User } from "@/lib/types"
 
 export async function getAllCompanies(): Promise<Company[]> {
   console.log("[company.service] Fetching all companies")
@@ -21,9 +21,31 @@ export async function getAllCompanies(): Promise<Company[]> {
     employeeCount: company.employeeCount || undefined,
     notes: company.notes || undefined,
     createdBy: company.createdBy,
+    assignedTeamId: company.assignedTeamId || undefined,
+    isGlobal: company.isGlobal,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   }))
+}
+
+export async function getCompaniesByUser(currentUser: User): Promise<Company[]> {
+  console.log("[company.service] Fetching companies for user level:", currentUser.level, "teamId:", currentUser.teamId)
+
+  const allCompanies = await getAllCompanies()
+
+  if (currentUser.level === 1) {
+    console.log("[company.service] Level 1 user, returning all companies")
+    return allCompanies
+  }
+
+  const visibleCompanies = allCompanies.filter(company =>
+    company.isGlobal ||
+    (currentUser.teamId && company.assignedTeamId === currentUser.teamId)
+  )
+
+  console.log("[company.service] Visible companies:", visibleCompanies.length)
+
+  return visibleCompanies
 }
 
 export async function getCompanyById(id: string): Promise<Company | null> {
@@ -49,6 +71,8 @@ export async function getCompanyById(id: string): Promise<Company | null> {
     employeeCount: company.employeeCount || undefined,
     notes: company.notes || undefined,
     createdBy: company.createdBy,
+    assignedTeamId: company.assignedTeamId || undefined,
+    isGlobal: company.isGlobal,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   }
@@ -63,10 +87,12 @@ interface CreateCompanyData {
   address?: string
   employeeCount?: number
   notes?: string
+  assignedTeamId?: string | null
+  isGlobal?: boolean
 }
 
 export async function createCompany(data: CreateCompanyData, createdBy: string): Promise<Company> {
-  console.log("[company.service] Creating company:", data.name)
+  console.log("[company.service] Creating company:", data.name, "assignedTeamId:", data.assignedTeamId, "isGlobal:", data.isGlobal)
 
   const result = await db.insert(companies).values({
     name: data.name,
@@ -77,6 +103,8 @@ export async function createCompany(data: CreateCompanyData, createdBy: string):
     address: data.address,
     employeeCount: data.employeeCount,
     notes: data.notes,
+    assignedTeamId: data.assignedTeamId,
+    isGlobal: data.isGlobal ?? false,
     createdBy,
   }).returning()
 
@@ -95,6 +123,8 @@ export async function createCompany(data: CreateCompanyData, createdBy: string):
     employeeCount: company.employeeCount || undefined,
     notes: company.notes || undefined,
     createdBy: company.createdBy,
+    assignedTeamId: company.assignedTeamId || undefined,
+    isGlobal: company.isGlobal,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   }
@@ -109,6 +139,8 @@ interface UpdateCompanyData {
   address?: string
   employeeCount?: number
   notes?: string
+  assignedTeamId?: string | null
+  isGlobal?: boolean
 }
 
 export async function updateCompany(id: string, data: UpdateCompanyData): Promise<Company> {
@@ -141,6 +173,8 @@ export async function updateCompany(id: string, data: UpdateCompanyData): Promis
     employeeCount: company.employeeCount || undefined,
     notes: company.notes || undefined,
     createdBy: company.createdBy,
+    assignedTeamId: company.assignedTeamId || undefined,
+    isGlobal: company.isGlobal,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   }

@@ -148,10 +148,10 @@ export function createUsersColumns(
     },
     {
       accessorKey: "managerId",
-      header: "Gerente",
+      header: "Supervisor",
       cell: ({ row }) => {
         const user = row.original
-        if (!user.managerId) return <span className="text-muted-foreground text-sm">Sin gerente</span>
+        if (!user.managerId) return <span className="text-muted-foreground text-sm">Sin supervisor</span>
         const manager = allUsers.find((u) => u.id === user.managerId)
         return <span className="text-sm">{manager?.name || "N/A"}</span>
       },

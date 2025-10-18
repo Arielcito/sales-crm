@@ -86,6 +86,8 @@ export const companies = pgTable("company", {
   createdBy: uuid("createdBy")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  assignedTeamId: uuid("assignedTeamId").references(() => teams.id, { onDelete: "set null" }),
+  isGlobal: boolean("isGlobal").notNull().default(false),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -114,6 +116,7 @@ export const dealStages = pgTable("dealStage", {
   isDefault: boolean("isDefault").notNull().default(false),
   isActive: boolean("isActive").notNull().default(true),
   createdBy: uuid("createdBy").references(() => users.id, { onDelete: "set null" }),
+  companyOwnerId: uuid("companyOwnerId").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
@@ -167,6 +170,24 @@ export const dealHistory = pgTable("dealHistory", {
   newValue: text("newValue"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export const companyRequests = pgTable("companyRequest", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestedBy: uuid("requestedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  companyName: text("companyName").notNull(),
+  email: text("email"),
+  phone: varchar("phone", { length: 50 }),
+  website: text("website"),
+  industry: varchar("industry", { length: 100 }),
+  notes: text("notes"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  reviewedBy: uuid("reviewedBy").references(() => users.id, { onDelete: "set null" }),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 export const organizationBranding = pgTable("organizationBranding", {

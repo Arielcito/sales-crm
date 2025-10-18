@@ -44,7 +44,13 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
   })
 
   const visibleUsers = useMemo(() => {
-    return users.filter(user => user.level >= currentUser.level)
+    if (currentUser.level === 1) {
+      return users
+    }
+
+    return users.filter(user =>
+      user.teamId === currentUser.teamId && user.level >= currentUser.level
+    )
   }, [users, currentUser])
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Building2,
   Palette,
+  UsersRound,
 } from "lucide-react"
 import { signOut } from "@/lib/auth-client"
 import { useCurrentUser } from "@/hooks/use-current-user"
@@ -43,6 +44,7 @@ export function AppSidebar() {
     { id: "kanban", label: "Pipeline de Ventas", icon: Kanban },
     { id: "companies", label: "Empresas y Contactos", icon: Building2 },
     { id: "users", label: "Gestión de Usuarios", icon: Users, levelRequired: 1 },
+    { id: "teams", label: "Gestión de Equipos", icon: UsersRound, levelRequired: 2 },
     { id: "settings/branding", label: "Personalización", icon: Palette, levelRequired: 1 },
     { id: "currency", label: "Cotizaciones", icon: Settings },
   ]

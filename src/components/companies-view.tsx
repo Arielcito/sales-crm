@@ -13,6 +13,7 @@ import { NewCompanyModal } from "@/components/new-company-modal"
 import { NewContactModal } from "@/components/new-contact-modal"
 import { EditCompanyModal } from "@/components/edit-company-modal"
 import { EditContactModal } from "@/components/edit-contact-modal"
+import { CompanyRequestModal } from "@/components/company-request-modal"
 import { CompaniesSkeleton } from "@/components/companies-skeleton"
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false)
   const [showNewContactModal, setShowNewContactModal] = useState(false)
+  const [showRequestModal, setShowRequestModal] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
@@ -104,12 +106,23 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Empresas y Contactos</h1>
-          <p className="text-muted-foreground mt-1">Gestiona las empresas y sus contactos</p>
+          <p className="text-muted-foreground mt-1">
+            {currentUser.level === 1
+              ? "Gestiona las empresas y sus contactos"
+              : "Empresas asignadas a tu equipo"}
+          </p>
         </div>
-        <Button onClick={() => setShowNewCompanyModal(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nueva Empresa
-        </Button>
+        {currentUser.level === 1 ? (
+          <Button onClick={() => setShowNewCompanyModal(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nueva Empresa
+          </Button>
+        ) : (
+          <Button onClick={() => setShowRequestModal(true)} className="gap-2" variant="outline">
+            <Plus className="w-4 h-4" />
+            Solicitar Empresa
+          </Button>
+        )}
       </div>
 
       <div className="relative">
@@ -247,6 +260,14 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
 
       {showNewCompanyModal && (
         <NewCompanyModal onClose={() => setShowNewCompanyModal(false)} onSuccess={handleCompanyCreated} />
+      )}
+
+      {showRequestModal && (
+        <CompanyRequestModal
+          isOpen={showRequestModal}
+          onClose={() => setShowRequestModal(false)}
+          onSuccess={() => setShowRequestModal(false)}
+        />
       )}
 
       {showNewContactModal && selectedCompany && (

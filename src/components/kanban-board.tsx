@@ -11,7 +11,9 @@ import { DealModal } from "./deal-modal"
 import { CurrencyToggle } from "./currency-toggle"
 import { NewDealModal } from "./new-deal-modal"
 import { KanbanSkeleton } from "./kanban-skeleton"
+import { DashboardFilters } from "./dashboard-filters"
 import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
+import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
 
 interface KanbanBoardProps {
   currentUser: User
@@ -24,9 +26,9 @@ interface KanbanBoardProps {
 export function KanbanBoard({ currentUser, stages, companies, contacts, users }: KanbanBoardProps) {
   const { data: deals = [], isLoading } = useDeals()
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
+  const { dateRange, setDateRange, currency, setCurrency } = useDashboardFilters()
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
-  const [currency, setCurrency] = useState<Currency>("USD")
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
   const [showNewDealModal, setShowNewDealModal] = useState(false)
   const [optimisticDealId, setOptimisticDealId] = useState<string | null>(null)
@@ -96,7 +98,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
   return (
     <div className="h-screen flex flex-col bg-background">
       <div className="sticky top-0 z-10 bg-card border-b border-border/50 p-6 flex-shrink-0 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-3xl font-bold text-foreground">Pipeline de Ventas</h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -108,13 +110,18 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
               <Plus className="w-4 h-4 mr-2" />
               Nueva Negociación
             </Button>
-            <CurrencyToggle currency={currency} onCurrencyChange={setCurrency} />
           </div>
         </div>
+        <DashboardFilters
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          currency={currency}
+          onCurrencyChange={setCurrency}
+        />
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-x-auto overflow-y-hidden">
+        <div className="h-full overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
           <div className="flex gap-4 p-6 h-full min-w-max">
             {orderedStages.map((stage) => {
               const stageDeals = deals.filter((deal) => deal.stageId === stage.id)
