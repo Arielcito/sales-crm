@@ -141,6 +141,7 @@ export const deals = pgTable("deal", {
   currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   amountUsd: decimal("amountUsd", { precision: 12, scale: 2 }),
   amountArs: decimal("amountArs", { precision: 12, scale: 2 }),
+  dollarRate: decimal("dollarRate", { precision: 10, scale: 2 }),
   exchangeRateId: uuid("exchangeRateId").references(() => exchangeRates.id, { onDelete: "set null" }),
   stageId: uuid("stageId")
     .notNull()

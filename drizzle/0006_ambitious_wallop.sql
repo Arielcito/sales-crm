@@ -1,0 +1,1 @@
+ALTER TABLE "deal" ADD COLUMN "dollarRate" numeric(10, 2);

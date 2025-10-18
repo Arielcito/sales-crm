@@ -87,6 +87,7 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
         ...formData,
         amountUsd,
         amountArs,
+        dollarRate: parseFloat(exchangeRate.usdToArs),
         exchangeRateId: savedExchangeRate.id,
         expectedCloseDate: formData.expectedCloseDate ? new Date(formData.expectedCloseDate) : undefined,
       })

@@ -32,6 +32,7 @@ export async function getAllDeals(params?: GetDealsParams): Promise<Deal[]> {
     currency: deal.currency,
     amountUsd: deal.amountUsd ? parseFloat(deal.amountUsd) : undefined,
     amountArs: deal.amountArs ? parseFloat(deal.amountArs) : undefined,
+    dollarRate: deal.dollarRate ? parseFloat(deal.dollarRate) : undefined,
     exchangeRateId: deal.exchangeRateId || undefined,
     stageId: deal.stageId,
     probability: deal.probability || undefined,
@@ -65,6 +66,7 @@ export async function getDealById(id: string): Promise<Deal | null> {
     currency: deal.currency,
     amountUsd: deal.amountUsd ? parseFloat(deal.amountUsd) : undefined,
     amountArs: deal.amountArs ? parseFloat(deal.amountArs) : undefined,
+    dollarRate: deal.dollarRate ? parseFloat(deal.dollarRate) : undefined,
     exchangeRateId: deal.exchangeRateId || undefined,
     stageId: deal.stageId,
     probability: deal.probability || undefined,
@@ -85,6 +87,7 @@ interface CreateDealData {
   currency: string
   amountUsd?: number
   amountArs?: number
+  dollarRate?: number
   exchangeRateId?: string
   stageId: string
   probability?: number
@@ -103,6 +106,7 @@ export async function createDeal(data: CreateDealData): Promise<Deal> {
     currency: data.currency,
     amountUsd: data.amountUsd?.toString() || null,
     amountArs: data.amountArs?.toString() || null,
+    dollarRate: data.dollarRate?.toString() || null,
     exchangeRateId: data.exchangeRateId || null,
     stageId: data.stageId,
     probability: data.probability || 0,
@@ -123,6 +127,7 @@ export async function createDeal(data: CreateDealData): Promise<Deal> {
     currency: deal.currency,
     amountUsd: deal.amountUsd ? parseFloat(deal.amountUsd) : undefined,
     amountArs: deal.amountArs ? parseFloat(deal.amountArs) : undefined,
+    dollarRate: deal.dollarRate ? parseFloat(deal.dollarRate) : undefined,
     exchangeRateId: deal.exchangeRateId || undefined,
     stageId: deal.stageId,
     probability: deal.probability || undefined,
@@ -140,6 +145,7 @@ interface UpdateDealData {
   currency?: string
   amountUsd?: number
   amountArs?: number
+  dollarRate?: number
   exchangeRateId?: string
   stageId?: string
   probability?: number
@@ -158,6 +164,7 @@ export async function updateDeal(id: string, data: UpdateDealData): Promise<Deal
   if (data.currency !== undefined) updateData.currency = data.currency
   if (data.amountUsd !== undefined) updateData.amountUsd = data.amountUsd?.toString() || null
   if (data.amountArs !== undefined) updateData.amountArs = data.amountArs?.toString() || null
+  if (data.dollarRate !== undefined) updateData.dollarRate = data.dollarRate?.toString() || null
   if (data.exchangeRateId !== undefined) updateData.exchangeRateId = data.exchangeRateId || null
   if (data.stageId !== undefined) updateData.stageId = data.stageId
   if (data.probability !== undefined) updateData.probability = data.probability
@@ -186,6 +193,7 @@ export async function updateDeal(id: string, data: UpdateDealData): Promise<Deal
     currency: deal.currency,
     amountUsd: deal.amountUsd ? parseFloat(deal.amountUsd) : undefined,
     amountArs: deal.amountArs ? parseFloat(deal.amountArs) : undefined,
+    dollarRate: deal.dollarRate ? parseFloat(deal.dollarRate) : undefined,
     exchangeRateId: deal.exchangeRateId || undefined,
     stageId: deal.stageId,
     probability: deal.probability || undefined,

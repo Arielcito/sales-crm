@@ -43,6 +43,13 @@
       "when": 1760755528064,
       "tag": "0005_lumpy_caretaker",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1760757429943,
+      "tag": "0006_ambitious_wallop",
+      "breakpoints": true
     }
   ]
 }

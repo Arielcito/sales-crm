@@ -84,6 +84,7 @@ export interface Deal {
   currency: string;
   amountUsd?: number | null;
   amountArs?: number | null;
+  dollarRate?: number | null;
   exchangeRateId?: string | null;
   stageId: string;
   probability?: number | null;

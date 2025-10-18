@@ -225,11 +225,34 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                                   <div>{getContactName(deal.contactId)}</div>
                                 </div>
 
+                                {deal.dollarRate && (
+                                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                                    <div className="text-xs text-muted-foreground">
+                                      Cotización USD
+                                    </div>
+                                    <div className="text-xs font-semibold text-primary">
+                                      ${new Intl.NumberFormat("es-AR", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      }).format(deal.dollarRate)}
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                   <div className="text-xs font-medium text-muted-foreground">
                                     {responsibleUser?.name}
                                   </div>
-                                  {deal.expectedCloseDate && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(deal.createdAt).toLocaleDateString("es-AR")}
+                                  </div>
+                                </div>
+
+                                {deal.expectedCloseDate && (
+                                  <div className="flex items-center justify-between pt-1">
+                                    <div className="text-xs text-muted-foreground">
+                                      Fecha límite
+                                    </div>
                                     <div
                                       className={`text-xs font-medium px-2 py-1 rounded-md ${
                                         isOverdue ? "bg-red-50 text-red-600" : "bg-muted text-muted-foreground"
@@ -237,8 +260,8 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                                     >
                                       {new Date(deal.expectedCloseDate).toLocaleDateString("es-AR")}
                                     </div>
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
