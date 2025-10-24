@@ -112,28 +112,48 @@ export async function getUsersByTeam(currentUser: User): Promise<User[]> {
   return teamUsers
 }
 
-export async function validateManagerAssignment(userId: string, managerId: string | null, userLevel: number): Promise<{ valid: boolean; error?: string }> {
-  console.log("[user.service] Validating manager assignment for user:", userId, "manager:", managerId, "level:", userLevel)
+export async function validateManagerAssignment(userId: string, managerId: string | null, userLevel: number, teamId?: string | null): Promise<{ valid: boolean; error?: string }> {
+  console.log("[user.service] Validating manager assignment for user:", userId, "manager:", managerId, "level:", userLevel, "teamId:", teamId)
 
-  if (!managerId) {
-    if (userLevel === 1) {
-      return { valid: true }
+  if (userLevel === 1) {
+    if (managerId) {
+      return { valid: false, error: "Level 1 (Super Admin) cannot have a manager" }
     }
-    return { valid: false, error: "Users with level 2-4 must have a manager assigned" }
+    if (teamId) {
+      return { valid: false, error: "Level 1 (Super Admin) cannot be assigned to a team" }
+    }
+    return { valid: true }
   }
 
-  const manager = await getUserById(managerId)
-
-  if (!manager) {
-    return { valid: false, error: "Manager not found" }
+  if (userLevel === 2) {
+    if (managerId) {
+      return { valid: false, error: "Level 2 (Team Leader) does not need a manager" }
+    }
+    return { valid: true }
   }
 
-  if (manager.id === userId) {
-    return { valid: false, error: "User cannot be their own manager" }
-  }
+  if (userLevel === 3 || userLevel === 4) {
+    if (!managerId) {
+      return { valid: false, error: "Levels 3 and 4 must have a manager assigned" }
+    }
 
-  if (userLevel >= 3 && manager.level > 2) {
-    return { valid: false, error: "Users with level 3-4 must report to a manager with level 2 or higher" }
+    if (!teamId) {
+      return { valid: false, error: "Levels 3 and 4 must be assigned to a team" }
+    }
+
+    const manager = await getUserById(managerId)
+
+    if (!manager) {
+      return { valid: false, error: "Manager not found" }
+    }
+
+    if (manager.id === userId) {
+      return { valid: false, error: "User cannot be their own manager" }
+    }
+
+    if (manager.level !== 2) {
+      return { valid: false, error: "Levels 3 and 4 must report to a Level 2 (Team Leader)" }
+    }
   }
 
   return { valid: true }

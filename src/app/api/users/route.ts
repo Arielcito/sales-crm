@@ -59,6 +59,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (validatedData.level === 1 && currentUser.level !== 1) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Solo el Super Admin puede crear otro nivel 1" } },
+        { status: 403 }
+      )
+    }
+
+    if (validatedData.level === 2 && currentUser.level !== 1) {
+      return NextResponse.json(
+        { success: false, error: { code: "FORBIDDEN", message: "Solo el nivel 1 puede crear líderes de equipo (nivel 2)" } },
+        { status: 403 }
+      )
+    }
+
     const [existingUser] = await db.select().from(users).where(eq(users.email, validatedData.email)).limit(1)
     if (existingUser) {
       return NextResponse.json(

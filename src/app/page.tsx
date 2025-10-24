@@ -36,10 +36,10 @@ export default function Home() {
           <h1 className="text-2xl font-bold">Sales CRM</h1>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href="/auth/signin">Sign In</Link>
+              <Link href="/auth/signin">Iniciar Sesión</Link>
             </Button>
             <Button asChild>
-              <Link href="/auth/signup">Sign Up</Link>
+              <Link href="/auth/signup">Registrarse</Link>
             </Button>
           </div>
         </div>
@@ -47,16 +47,16 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold mb-4">Modern Sales CRM</h2>
+          <h2 className="text-5xl font-bold mb-4">CRM de Ventas Moderno</h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Built with Next.js, Better Auth, Drizzle ORM, shadcn/ui, Zod, and React Query
+            Construido con Next.js, Better Auth, Drizzle ORM, shadcn/ui, Zod y React Query
           </p>
           <div className="flex gap-4 justify-center">
             <Button size="lg" asChild>
-              <Link href="/auth/signup">Get Started</Link>
+              <Link href="/auth/signup">Comenzar</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/auth/signin">Sign In</Link>
+              <Link href="/auth/signin">Iniciar Sesión</Link>
             </Button>
           </div>
         </div>
@@ -64,42 +64,42 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Contact Management</CardTitle>
+              <CardTitle>Gestión de Contactos</CardTitle>
               <CardDescription>
-                Keep track of all your contacts and relationships
+                Mantén el seguimiento de todos tus contactos y relaciones
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Organize your contacts with custom fields, tags, and notes
+                Organiza tus contactos con campos personalizados, etiquetas y notas
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Deal Pipeline</CardTitle>
+              <CardTitle>Pipeline de Negocios</CardTitle>
               <CardDescription>
-                Manage your sales pipeline efficiently
+                Gestiona tu pipeline de ventas de manera eficiente
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Track deals through different stages and close more sales
+                Rastrea los negocios a través de diferentes etapas y cierra más ventas
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Secure Authentication</CardTitle>
+              <CardTitle>Autenticación Segura</CardTitle>
               <CardDescription>
-                Enterprise-grade security with Better Auth
+                Seguridad de nivel empresarial con Better Auth
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Multiple authentication methods including email and OAuth
+                Múltiples métodos de autenticación incluyendo email y OAuth
               </p>
             </CardContent>
           </Card>

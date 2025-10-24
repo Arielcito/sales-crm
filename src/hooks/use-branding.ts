@@ -64,18 +64,10 @@ export const useUploadLogo = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData()
-      formData.append("file", file)
-
+    mutationFn: async (url: string) => {
       const response = await axios.post<ApiResponse<{ logoUrl: string }>>(
         "/api/branding/upload-logo",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        { url }
       )
 
       if (!response.data.success) {

@@ -28,8 +28,8 @@ export default function SignInPage() {
       });
       router.push("/dashboard");
     } catch (err) {
-      setError("Invalid email or password");
-      console.error(err);
+      setError("Correo electrónico o contraseña inválidos");
+      console.error("Error en inicio de sesión:", err);
     } finally {
       setLoading(false);
     }
@@ -39,21 +39,21 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg border-border">
         <CardHeader className="pb-6">
-          <CardTitle className="text-2xl text-foreground font-semibold">Sign In</CardTitle>
+          <CardTitle className="text-2xl text-foreground font-semibold">Iniciar Sesión</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Enter your credentials to access your CRM account
+            Ingresa tus credenciales para acceder a tu cuenta CRM
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email
+                Correo electrónico
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="tu@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring"
@@ -62,7 +62,7 @@ export default function SignInPage() {
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium text-foreground">
-                Password
+                Contraseña
               </label>
               <Input
                 id="password"
@@ -90,14 +90,14 @@ export default function SignInPage() {
                   <span>Iniciando sesión...</span>
                 </div>
               ) : (
-                "Sign In"
+                "Iniciar Sesión"
               )}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground border-t border-border pt-4">
-            Don&apos;t have an account?{" "}
+            ¿No tienes una cuenta?{" "}
             <Link href="/auth/signup" className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium">
-              Sign up
+              Regístrate
             </Link>
           </div>
         </CardContent>

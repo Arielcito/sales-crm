@@ -95,7 +95,7 @@ export async function PATCH(
       )
     }
 
-    if (currentUser.level > 2 && currentUser.id !== id) {
+    if (currentUser.level >= 3 && currentUser.id !== id) {
       console.log("[API /users/[id]] Insufficient permissions")
       return NextResponse.json(
         { success: false, error: { code: "FORBIDDEN", message: "No tienes permisos para modificar este usuario" } },
@@ -120,8 +120,11 @@ export async function PATCH(
     const newManagerId = validatedData.managerId !== undefined
       ? validatedData.managerId
       : (existingUser.managerId ?? null)
+    const newTeamId = validatedData.teamId !== undefined
+      ? validatedData.teamId
+      : (existingUser.teamId ?? null)
 
-    const validation = await validateManagerAssignment(id, newManagerId, newLevel)
+    const validation = await validateManagerAssignment(id, newManagerId, newLevel, newTeamId)
 
     if (!validation.valid) {
       console.log("[API /users/[id]] Manager assignment validation failed:", validation.error)

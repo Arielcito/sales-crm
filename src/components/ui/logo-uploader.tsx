@@ -1,14 +1,16 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { Upload, X, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useUploadThing } from "@/lib/uploadthing"
+import { toast } from "sonner"
 
 interface LogoUploaderProps {
   currentLogoUrl?: string | null
-  onUpload: (file: File) => void
+  onUpload: (url: string) => void
   onDelete?: () => void
   isUploading?: boolean
   isDeleting?: boolean
@@ -23,16 +25,30 @@ export function LogoUploader({
 }: LogoUploaderProps) {
   const [preview, setPreview] = useState<string | null>(currentLogoUrl || null)
   const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { startUpload, isUploading: isUploadingToUT } = useUploadThing("logoUploader", {
+    onClientUploadComplete: (res) => {
+      if (res?.[0]?.url) {
+        console.log("[LogoUploader] Upload complete:", res[0].url)
+        setPreview(res[0].url)
+      }
+    },
+    onUploadError: (error) => {
+      console.error("[LogoUploader] Upload error:", error)
+      toast.error("Error al subir el logo")
+      setPreview(currentLogoUrl || null)
+    },
+  })
 
-  const handleFileChange = (file: File | null) => {
+  const handleFileChange = async (file: File | null) => {
     if (!file) return
 
     if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten archivos de imagen")
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("El archivo debe ser menor a 4MB")
       return
     }
 
@@ -42,13 +58,9 @@ export function LogoUploader({
     }
     reader.readAsDataURL(file)
 
-    onUpload(file)
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      handleFileChange(file)
+    const uploadResult = await startUpload([file])
+    if (uploadResult?.[0]?.url) {
+      onUpload(uploadResult[0].url)
     }
   }
 
@@ -73,17 +85,29 @@ export function LogoUploader({
 
   const handleDelete = () => {
     setPreview(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
     onDelete?.()
   }
+
+  const handleClick = () => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/png,image/jpeg,image/jpg,image/svg+xml"
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        handleFileChange(file)
+      }
+    }
+    input.click()
+  }
+
+  const loading = isUploading || isDeleting || isUploadingToUT
 
   return (
     <div className="space-y-2">
       <Label>Logo de la Empresa</Label>
       <p className="text-xs text-muted-foreground">
-        PNG, JPG, JPEG o SVG. Máximo 5MB.
+        PNG, JPG, JPEG o SVG. Máximo 4MB.
       </p>
 
       <div
@@ -95,7 +119,7 @@ export function LogoUploader({
           isDragging
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/50",
-          (isUploading || isDeleting) && "opacity-50 pointer-events-none"
+          loading && "opacity-50 pointer-events-none"
         )}
       >
         {preview ? (
@@ -114,8 +138,8 @@ export function LogoUploader({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading || isDeleting}
+                onClick={handleClick}
+                disabled={loading}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Cambiar
@@ -125,7 +149,7 @@ export function LogoUploader({
                 variant="destructive"
                 size="sm"
                 onClick={handleDelete}
-                disabled={isUploading || isDeleting}
+                disabled={loading}
               >
                 <X className="w-4 h-4 mr-2" />
                 Eliminar
@@ -148,22 +172,14 @@ export function LogoUploader({
             <Button
               type="button"
               variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading || isDeleting}
+              onClick={handleClick}
+              disabled={loading}
             >
               <Upload className="w-4 h-4 mr-2" />
               Seleccionar Archivo
             </Button>
           </div>
         )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-          onChange={handleInputChange}
-          className="hidden"
-        />
       </div>
     </div>
   )

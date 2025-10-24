@@ -7,13 +7,25 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function canManageUser(currentUser: User, targetUserLevel: number): boolean {
-  return targetUserLevel > currentUser.level
+  if (currentUser.level === 1) {
+    return true
+  }
+
+  if (currentUser.level === 2) {
+    return targetUserLevel === 3 || targetUserLevel === 4
+  }
+
+  return false
 }
 
 export function getAvailableLevels(currentUserLevel: number): number[] {
-  const levels: number[] = []
-  for (let i = currentUserLevel + 1; i <= 4; i++) {
-    levels.push(i)
+  if (currentUserLevel === 1) {
+    return [2, 3, 4]
   }
-  return levels
+
+  if (currentUserLevel === 2) {
+    return [3, 4]
+  }
+
+  return []
 }

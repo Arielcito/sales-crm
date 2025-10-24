@@ -87,9 +87,9 @@ export default function BrandingPage() {
     }
   }
 
-  const handleLogoUpload = async (file: File) => {
+  const handleLogoUpload = async (url: string) => {
     try {
-      await uploadLogo.mutateAsync(file)
+      await uploadLogo.mutateAsync(url)
       toast.success("Logo subido correctamente")
     } catch (error) {
       toast.error("Error al subir el logo")

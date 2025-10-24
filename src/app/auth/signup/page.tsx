@@ -29,8 +29,8 @@ export default function SignUpPage() {
       });
       router.push("/dashboard");
     } catch (err) {
-      setError("Failed to create account. Please try again.");
-      console.error(err);
+      setError("Error al crear la cuenta. Por favor, inténtalo de nuevo.");
+      console.error("Error en registro:", err);
     } finally {
       setLoading(false);
     }
@@ -40,21 +40,21 @@ export default function SignUpPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign Up</CardTitle>
+          <CardTitle className="text-2xl">Registrarse</CardTitle>
           <CardDescription>
-            Create a new account to get started with Sales CRM
+            Crea una nueva cuenta para comenzar con Sales CRM
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
-                Name
+                Nombre
               </label>
               <Input
                 id="name"
                 type="text"
-                placeholder="John Doe"
+                placeholder="Juan Pérez"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -62,12 +62,12 @@ export default function SignUpPage() {
             </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                Correo electrónico
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="tu@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -75,7 +75,7 @@ export default function SignUpPage() {
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                Contraseña
               </label>
               <Input
                 id="password"
@@ -91,13 +91,13 @@ export default function SignUpPage() {
               <div className="text-sm text-destructive">{error}</div>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
+              {loading ? "Creando cuenta..." : "Registrarse"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            ¿Ya tienes una cuenta?{" "}
             <Link href="/auth/signin" className="text-primary hover:underline">
-              Sign in
+              Inicia sesión
             </Link>
           </div>
         </CardContent>

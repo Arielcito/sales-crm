@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCreateUser, useUpdateUser, useUsers } from "@/hooks/use-users"
+import { useTeams } from "@/hooks/use-teams"
 import type { User } from "@/lib/types"
 import { getAvailableLevels } from "@/lib/utils"
 
@@ -19,6 +20,7 @@ interface UserFormModalProps {
 
 export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: UserFormModalProps) {
   const { data: allUsers = [] } = useUsers()
+  const { data: teams = [] } = useTeams()
   const createUserMutation = useCreateUser()
   const updateUserMutation = useUpdateUser()
 
@@ -57,13 +59,25 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
   }, [editingUser, isOpen])
 
   const availableLevels = getAvailableLevels(currentUser.level)
+  const selectedLevel = Number.parseInt(formData.level || "4")
 
-  const availableManagers = allUsers.filter(
-    (user) => user.level < Number.parseInt(formData.level || "4") && user.id !== editingUser?.id
-  )
+  const availableManagers = allUsers.filter((user) => {
+    if (user.id === editingUser?.id) return false
+
+    if (selectedLevel === 3 || selectedLevel === 4) {
+      if (!formData.teamId) return false
+      return user.level === 2 && user.teamId === formData.teamId
+    }
+
+    return false
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const parsedLevel = Number.parseInt(formData.level)
+    const managerId = formData.managerId && formData.managerId !== "none" ? formData.managerId : null
+    const teamId = formData.teamId && formData.teamId !== "none" ? formData.teamId : null
 
     try {
       if (editingUser) {
@@ -73,9 +87,9 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
             name: formData.name,
             email: formData.email,
             role: formData.role,
-            level: Number.parseInt(formData.level),
-            managerId: formData.managerId && formData.managerId !== "none" ? formData.managerId : null,
-            teamId: formData.teamId || null,
+            level: parsedLevel,
+            managerId,
+            teamId,
           },
         })
       } else {
@@ -84,9 +98,9 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
           email: formData.email,
           password: formData.password,
           role: formData.role,
-          level: Number.parseInt(formData.level),
-          managerId: formData.managerId && formData.managerId !== "none" ? formData.managerId : null,
-          teamId: formData.teamId || null,
+          level: parsedLevel,
+          managerId,
+          teamId,
         })
       }
       onClose()
@@ -159,7 +173,7 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
             <Label htmlFor="level">Nivel *</Label>
             <Select
               value={formData.level}
-              onValueChange={(value) => setFormData({ ...formData, level: value, managerId: "" })}
+              onValueChange={(value) => setFormData({ ...formData, level: value, managerId: "", teamId: "" })}
               required
             >
               <SelectTrigger>
@@ -168,42 +182,65 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
               <SelectContent>
                 {availableLevels.map((level) => (
                   <SelectItem key={level} value={level.toString()}>
-                    Nivel {level} - {level === 2 ? "Director/Gerente" : level === 3 ? "Senior" : "Junior"}
+                    Nivel {level} - {level === 2 ? "Líder de Equipo" : level === 3 ? "Senior" : "Junior"}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="manager">Gerente</Label>
-            <Select
-              value={formData.managerId || "none"}
-              onValueChange={(value) => setFormData({ ...formData, managerId: value === "none" ? "" : value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar gerente (opcional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sin gerente</SelectItem>
-                {availableManagers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name} - Nivel {user.level} ({user.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {selectedLevel !== 1 && (selectedLevel === 2 || formData.level) && (
+            <div>
+              <Label htmlFor="teamId">
+                Equipo {(selectedLevel === 3 || selectedLevel === 4) && "*"}
+              </Label>
+              <Select
+                value={formData.teamId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, teamId: value === "none" ? "" : value, managerId: "" })}
+                required={selectedLevel === 3 || selectedLevel === 4}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedLevel === 2 ? "Seleccionar equipo (opcional)" : "Seleccionar equipo *"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedLevel === 2 && <SelectItem value="none">Sin equipo</SelectItem>}
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          <div>
-            <Label htmlFor="teamId">ID del Equipo (opcional)</Label>
-            <Input
-              id="teamId"
-              value={formData.teamId}
-              onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-              placeholder="UUID del equipo"
-            />
-          </div>
+          {(selectedLevel === 3 || selectedLevel === 4) && formData.teamId && (
+            <div>
+              <Label htmlFor="manager">Líder de Equipo (Manager) *</Label>
+              <Select
+                value={formData.managerId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, managerId: value === "none" ? "" : value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar líder de equipo *" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Seleccionar líder</SelectItem>
+                  {availableManagers.length === 0 && (
+                    <SelectItem value="no-leaders" disabled>
+                      No hay líderes nivel 2 en este equipo
+                    </SelectItem>
+                  )}
+                  {availableManagers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.name} ({user.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex space-x-2 pt-4">
             <Button
