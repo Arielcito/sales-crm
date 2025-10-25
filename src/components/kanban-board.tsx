@@ -6,18 +6,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2 } from "lucide-react"
-import type { Deal, User, Currency } from "@/lib/types"
+import type { Deal, User, Currency, DealStage } from "@/lib/types"
 import { DealModal } from "./deal-modal"
 import { CurrencyToggle } from "./currency-toggle"
 import { NewDealModal } from "./new-deal-modal"
 import { KanbanSkeleton } from "./kanban-skeleton"
 import { DashboardFilters } from "./dashboard-filters"
+import { StageSettingsMenu } from "./stage-settings-menu"
+import { EditStageModal } from "./edit-stage-modal"
+import { CreateStageModal } from "./create-stage-modal"
 import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
+import { useToggleStageActive } from "@/hooks/use-deal-stages"
 
 interface KanbanBoardProps {
   currentUser: User
-  stages: Array<{ id: string; name: string; order: number; color: string }>
+  stages: DealStage[]
   companies: Array<{ id: string; name: string }>
   contacts: Array<{ id: string; name: string }>
   users: Array<{ id: string; name: string }>
@@ -26,6 +30,7 @@ interface KanbanBoardProps {
 export function KanbanBoard({ currentUser, stages, companies, contacts, users }: KanbanBoardProps) {
   const { data: deals = [], isLoading } = useDeals()
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
+  const { mutate: toggleStageActive } = useToggleStageActive()
   const { dateRange, setDateRange, currency, setCurrency } = useDashboardFilters()
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
@@ -33,6 +38,8 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
   const [showNewDealModal, setShowNewDealModal] = useState(false)
   const [optimisticDealId, setOptimisticDealId] = useState<string | null>(null)
   const [dragOverStage, setDragOverStage] = useState<string | null>(null)
+  const [editingStage, setEditingStage] = useState<DealStage | null>(null)
+  const [showCreateStageModal, setShowCreateStageModal] = useState(false)
 
   const handleDragStart = (e: React.DragEvent, deal: Deal) => {
     setDraggedDeal(deal)
@@ -89,7 +96,43 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
     return contacts.find(c => c.id === contactId)?.name || "Contacto Desconocido"
   }
 
-  const orderedStages = [...stages].sort((a, b) => a.order - b.order)
+  const handleEditStage = (stage: DealStage) => {
+    console.log("[KanbanBoard] Editing stage:", stage.id)
+    setEditingStage(stage)
+  }
+
+  const handleCreateStage = () => {
+    console.log("[KanbanBoard] Creating new stage")
+    setShowCreateStageModal(true)
+  }
+
+  const handleToggleStageActive = (stage: DealStage) => {
+    console.log("[KanbanBoard] Toggling stage active:", stage.id, !stage.isActive)
+
+    const confirmMessage = stage.isActive
+      ? `¿Estás seguro que deseas inactivar la etapa "${stage.name}"? Los negocios existentes permanecerán en esta etapa pero no será visible.`
+      : `¿Deseas activar la etapa "${stage.name}"?`
+
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
+    toggleStageActive(
+      { id: stage.id, isActive: !stage.isActive },
+      {
+        onSuccess: () => {
+          console.log("[KanbanBoard] Stage active toggled successfully")
+        },
+        onError: (error) => {
+          console.error("[KanbanBoard] Error toggling stage active:", error)
+          alert(error instanceof Error ? error.message : "Error al cambiar estado de etapa")
+        },
+      }
+    )
+  }
+
+  const orderedStages = [...stages].filter(s => s.isActive).sort((a, b) => a.order - b.order)
+  const isAdmin = currentUser.level === 1
 
   if (isLoading) {
     return <KanbanSkeleton />
@@ -148,16 +191,25 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                 >
                   <div className="p-4 border-b border-border/50 flex-shrink-0 bg-card">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-1">
                         <div
                           className="w-2 h-2 rounded-full"
                           style={{ backgroundColor: stage.color }}
                         />
                         <h3 className="font-semibold text-sm">{stage.name}</h3>
                       </div>
-                      <Badge variant="secondary" className="text-xs font-semibold bg-primary/10 text-primary border-0">
-                        {stageDeals.length}
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" className="text-xs font-semibold bg-primary/10 text-primary border-0">
+                          {stageDeals.length}
+                        </Badge>
+                        <StageSettingsMenu
+                          stage={stage}
+                          onEdit={handleEditStage}
+                          onCreate={handleCreateStage}
+                          onToggleActive={handleToggleStageActive}
+                          isAdmin={isAdmin}
+                        />
+                      </div>
                     </div>
                     <div className="text-xs font-medium text-muted-foreground">
                       {new Intl.NumberFormat("es-AR", {
@@ -291,6 +343,21 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
           currentUser={currentUser}
           onClose={() => setShowNewDealModal(false)}
           onSuccess={() => setShowNewDealModal(false)}
+        />
+      )}
+
+      {editingStage && (
+        <EditStageModal
+          stage={editingStage}
+          onClose={() => setEditingStage(null)}
+          onSuccess={() => setEditingStage(null)}
+        />
+      )}
+
+      {showCreateStageModal && (
+        <CreateStageModal
+          onClose={() => setShowCreateStageModal(false)}
+          onSuccess={() => setShowCreateStageModal(false)}
         />
       )}
     </div>
