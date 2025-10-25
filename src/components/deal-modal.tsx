@@ -38,7 +38,6 @@ export function DealModal({ deal, currentUser, currency, onClose, onUpdate }: De
 
   const company = companies.find((c) => c.id === deal.companyId)
   const contact = contacts.find((c) => c.id === deal.contactId)
-  const responsibleUser = users.find((user) => user.id === deal.userId)
   const currentStage = stages.find((s) => s.id === deal.stageId)
 
   const handleSave = () => {
@@ -220,10 +219,6 @@ export function DealModal({ deal, currentUser, currency, onClose, onUpdate }: De
               <div>
                 <Label className="text-muted-foreground text-xs font-medium">Industria</Label>
                 <p className="text-sm font-medium mt-1">{company?.industry}</p>
-              </div>
-              <div>
-                <Label className="text-muted-foreground text-xs font-medium">Responsable</Label>
-                <p className="text-sm font-medium mt-1">{responsibleUser?.name}</p>
               </div>
             </div>
           </div>

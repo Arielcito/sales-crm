@@ -15,9 +15,12 @@ import { DashboardFilters } from "./dashboard-filters"
 import { StageSettingsMenu } from "./stage-settings-menu"
 import { EditStageModal } from "./edit-stage-modal"
 import { CreateStageModal } from "./create-stage-modal"
+import { StatCard } from "./stat-card"
 import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
 import { useToggleStageActive } from "@/hooks/use-deal-stages"
+import { useDashboardStats } from "@/hooks/use-dashboard-data"
+import { TrendingUp, Briefcase, CheckCircle2, XCircle } from "lucide-react"
 
 interface KanbanBoardProps {
   currentUser: User
@@ -32,6 +35,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
   const { mutate: toggleStageActive } = useToggleStageActive()
   const { dateRange, setDateRange, currency, setCurrency } = useDashboardFilters()
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats({ dateRange, currency })
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
@@ -133,6 +137,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
 
   const orderedStages = [...stages].filter(s => s.isActive).sort((a, b) => a.order - b.order)
   const isAdmin = currentUser.level === 1
+  const currencySymbol = currency === "USD" ? "USD" : "ARS"
 
   if (isLoading) {
     return <KanbanSkeleton />
@@ -161,6 +166,48 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
           currency={currency}
           onCurrencyChange={setCurrency}
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <StatCard
+            title="Negociaciones Abiertas"
+            description="En oportunidad, cotización, aprobación y OC"
+            value={isLoadingStats ? "Cargando..." : `${stats?.openNegotiations.count || 0} (${currencySymbol} ${(stats?.openNegotiations.amount || 0).toLocaleString("es-AR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })})`}
+            icon={TrendingUp}
+          />
+
+          <StatCard
+            title="Proyectos en Curso"
+            description="Anticipo pagado, en curso y facturación final"
+            value={isLoadingStats ? "Cargando..." : `${stats?.ongoingProjects.count || 0} (${currencySymbol} ${(stats?.ongoingProjects.amount || 0).toLocaleString("es-AR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })})`}
+            icon={Briefcase}
+          />
+
+          <StatCard
+            title="Proyectos Terminados"
+            description="Proyectos finalizados exitosamente"
+            value={isLoadingStats ? "Cargando..." : `${stats?.finishedProjects.count || 0} (${currencySymbol} ${(stats?.finishedProjects.amount || 0).toLocaleString("es-AR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })})`}
+            icon={CheckCircle2}
+          />
+
+          <StatCard
+            title="Proyectos Perdidos"
+            description="Oportunidades que no se concretaron"
+            value={isLoadingStats ? "Cargando..." : `${stats?.lostProjects.count || 0} (${currencySymbol} ${(stats?.lostProjects.amount || 0).toLocaleString("es-AR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })})`}
+            icon={XCircle}
+          />
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">
