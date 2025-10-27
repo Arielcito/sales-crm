@@ -41,7 +41,7 @@ export default function SignInPage() {
         <CardHeader className="pb-6">
           <CardTitle className="text-2xl text-foreground font-semibold">Iniciar Sesión</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Ingresa tus credenciales para acceder a tu cuenta CRM
+            Ingresa tus credenciales para acceder a tu cuenta SalPip
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

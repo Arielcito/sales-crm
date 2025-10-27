@@ -28,7 +28,7 @@ export function Navigation({ currentUser, activeView, onViewChange, onLogout }: 
             <div className="w-5 h-5 bg-primary-foreground rounded-md"></div>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">CRM Pro</h1>
+            <h1 className="text-lg font-bold text-sidebar-foreground">SalPip</h1>
             <p className="text-xs text-sidebar-foreground/60">Sales Pipeline</p>
           </div>
         </div>

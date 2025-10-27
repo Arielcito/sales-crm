@@ -42,7 +42,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
           <div className="mx-auto w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2">
             <div className="w-6 h-6 md:w-8 md:h-8 bg-primary rounded-lg"></div>
           </div>
-          <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">CRM Demo</CardTitle>
+          <CardTitle className="text-2xl md:text-3xl font-bold text-foreground">SalPip Demo</CardTitle>
           <CardDescription className="text-muted-foreground text-balance text-sm md:text-base">
             Selecciona un usuario demo para explorar diferentes niveles de permisos del sistema
           </CardDescription>
@@ -83,7 +83,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
                   <span>Iniciando sesión...</span>
                 </div>
               ) : (
-                "Acceder al CRM"
+                "Acceder a SalPip"
               )}
             </Button>
           </form>

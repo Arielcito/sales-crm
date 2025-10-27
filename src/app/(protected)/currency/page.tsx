@@ -16,7 +16,7 @@ export default function CurrencyPage() {
 
   if (error || !currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="text-center">
           <p className="text-destructive">Error al cargar las cotizaciones</p>
           <p className="text-sm text-muted-foreground mt-2">
@@ -27,5 +27,11 @@ export default function CurrencyPage() {
     )
   }
 
-  return <CurrencySettings currentUser={currentUser} />
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="p-6">
+        <CurrencySettings currentUser={currentUser} />
+      </div>
+    </div>
+  )
 }

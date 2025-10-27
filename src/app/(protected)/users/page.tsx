@@ -18,7 +18,7 @@ export default function UsersPage() {
 
   if (error || !currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="text-center">
           <p className="text-destructive">Error al cargar los usuarios</p>
           <p className="text-sm text-muted-foreground mt-2">
@@ -29,5 +29,11 @@ export default function UsersPage() {
     )
   }
 
-  return <UsersView currentUser={currentUser} />
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="p-6">
+        <UsersView currentUser={currentUser} />
+      </div>
+    </div>
+  )
 }

@@ -42,10 +42,8 @@ export default function ProtectedLayout({
       <Toaster position="top-right" richColors />
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+        <main className="flex-1 overflow-hidden">
+          {children}
         </main>
       </div>
     </SidebarProvider>

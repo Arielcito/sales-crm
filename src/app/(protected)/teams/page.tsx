@@ -23,7 +23,7 @@ export default function TeamsPage() {
 
   if (!currentUser || currentUser.level > 2) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[400px] p-6">
         <div className="text-center">
           <p className="text-destructive">No tienes permisos para acceder a esta página</p>
           <p className="text-sm text-muted-foreground mt-2">
@@ -35,7 +35,8 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="h-full overflow-y-auto">
+      <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Gestión de Equipos</h1>
@@ -69,6 +70,7 @@ export default function TeamsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

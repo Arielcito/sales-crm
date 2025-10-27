@@ -144,69 +144,71 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      <div className="sticky top-0 z-10 bg-card border-b border-border/50 p-6 flex-shrink-0 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground">Pipeline de Ventas</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Mostrando {deals.length} negocios • Permisos Nivel {currentUser.level}
-            </p>
+    <div className="h-full flex flex-col bg-background overflow-hidden">
+      <div className="flex-shrink-0 bg-card border-b border-border/50 shadow-sm overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground">Pipeline de Ventas</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Mostrando {deals.length} negocios • Permisos Nivel {currentUser.level}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button onClick={() => setShowNewDealModal(true)} className="bg-accent hover:bg-accent/90 shadow-sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Nueva Negociación
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button onClick={() => setShowNewDealModal(true)} className="bg-accent hover:bg-accent/90 shadow-sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Nueva Negociación
-            </Button>
+          <DashboardFilters
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            currency={currency}
+            onCurrencyChange={setCurrency}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+            <StatCard
+              title="Negociaciones Abiertas"
+              description="En oportunidad, cotización, aprobación y OC"
+              value={isLoadingStats ? "Cargando..." : `${stats?.openNegotiations.count || 0} (${currencySymbol} ${(stats?.openNegotiations.amount || 0).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })})`}
+              icon={TrendingUp}
+            />
+
+            <StatCard
+              title="Proyectos en Curso"
+              description="Anticipo pagado, en curso y facturación final"
+              value={isLoadingStats ? "Cargando..." : `${stats?.ongoingProjects.count || 0} (${currencySymbol} ${(stats?.ongoingProjects.amount || 0).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })})`}
+              icon={Briefcase}
+            />
+
+            <StatCard
+              title="Proyectos Terminados"
+              description="Proyectos finalizados exitosamente"
+              value={isLoadingStats ? "Cargando..." : `${stats?.finishedProjects.count || 0} (${currencySymbol} ${(stats?.finishedProjects.amount || 0).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })})`}
+              icon={CheckCircle2}
+            />
+
+            <StatCard
+              title="Proyectos Perdidos"
+              description="Oportunidades que no se concretaron"
+              value={isLoadingStats ? "Cargando..." : `${stats?.lostProjects.count || 0} (${currencySymbol} ${(stats?.lostProjects.amount || 0).toLocaleString("es-AR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })})`}
+              icon={XCircle}
+            />
           </div>
-        </div>
-        <DashboardFilters
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          currency={currency}
-          onCurrencyChange={setCurrency}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <StatCard
-            title="Negociaciones Abiertas"
-            description="En oportunidad, cotización, aprobación y OC"
-            value={isLoadingStats ? "Cargando..." : `${stats?.openNegotiations.count || 0} (${currencySymbol} ${(stats?.openNegotiations.amount || 0).toLocaleString("es-AR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })})`}
-            icon={TrendingUp}
-          />
-
-          <StatCard
-            title="Proyectos en Curso"
-            description="Anticipo pagado, en curso y facturación final"
-            value={isLoadingStats ? "Cargando..." : `${stats?.ongoingProjects.count || 0} (${currencySymbol} ${(stats?.ongoingProjects.amount || 0).toLocaleString("es-AR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })})`}
-            icon={Briefcase}
-          />
-
-          <StatCard
-            title="Proyectos Terminados"
-            description="Proyectos finalizados exitosamente"
-            value={isLoadingStats ? "Cargando..." : `${stats?.finishedProjects.count || 0} (${currencySymbol} ${(stats?.finishedProjects.amount || 0).toLocaleString("es-AR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })})`}
-            icon={CheckCircle2}
-          />
-
-          <StatCard
-            title="Proyectos Perdidos"
-            description="Oportunidades que no se concretaron"
-            value={isLoadingStats ? "Cargando..." : `${stats?.lostProjects.count || 0} (${currencySymbol} ${(stats?.lostProjects.amount || 0).toLocaleString("es-AR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })})`}
-            icon={XCircle}
-          />
         </div>
       </div>
 

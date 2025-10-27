@@ -42,7 +42,7 @@ export default function SignUpPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Registrarse</CardTitle>
           <CardDescription>
-            Crea una nueva cuenta para comenzar con Sales CRM
+            Crea una nueva cuenta para comenzar con SalPip
           </CardDescription>
         </CardHeader>
         <CardContent>

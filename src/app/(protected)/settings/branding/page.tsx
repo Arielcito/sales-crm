@@ -110,7 +110,8 @@ export default function BrandingPage() {
   const isSaving = updateBranding.isPending || uploadLogo.isPending || deleteLogo.isPending
 
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-y-auto">
+      <div className="p-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -223,6 +224,7 @@ export default function BrandingPage() {
             sidebarColor={formData.sidebarColor}
           />
         </div>
+      </div>
       </div>
     </div>
   )

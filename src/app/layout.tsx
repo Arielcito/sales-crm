@@ -4,7 +4,7 @@ import { QueryProvider } from "@/providers/query-provider";
 import { BrandingProvider } from "@/providers/branding-provider";
 
 export const metadata: Metadata = {
-  title: "Sales CRM",
+  title: "SalPip",
   description: "A modern CRM built with Next.js, Better Auth, Drizzle, and shadcn/ui",
 };
 

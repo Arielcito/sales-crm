@@ -33,7 +33,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Sales CRM</h1>
+          <h1 className="text-2xl font-bold">SalPip</h1>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/auth/signin">Iniciar Sesión</Link>
@@ -47,7 +47,7 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold mb-4">CRM de Ventas Moderno</h2>
+          <h2 className="text-5xl font-bold mb-4">SalPip - Sales Pipeline</h2>
           <p className="text-xl text-muted-foreground mb-8">
             Construido con Next.js, Better Auth, Drizzle ORM, shadcn/ui, Zod y React Query
           </p>
