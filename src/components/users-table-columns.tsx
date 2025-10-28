@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { User } from "@/lib/types"
+import type { User, Team } from "@/lib/types"
 import { canManageUser } from "@/lib/utils"
 
 interface ColumnActionsProps {
@@ -57,7 +57,8 @@ export function createUsersColumns(
   currentUser: User,
   onEdit: (user: User) => void,
   onDelete: (user: User) => void,
-  allUsers: User[]
+  allUsers: User[],
+  allTeams: Team[]
 ): ColumnDef<User>[] {
   const getLevelBadgeColor = (level: number) => {
     switch (level) {
@@ -162,7 +163,8 @@ export function createUsersColumns(
       cell: ({ row }) => {
         const user = row.original
         if (!user.teamId) return <span className="text-muted-foreground text-sm">Sin equipo</span>
-        return <span className="text-xs text-muted-foreground">{user.teamId.substring(0, 8)}...</span>
+        const team = allTeams.find((t) => t.id === user.teamId)
+        return <span className="text-sm">{team?.name || "N/A"}</span>
       },
     },
     {

@@ -17,6 +17,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { UserFormModal } from "@/components/user-form-modal"
 import { createUsersColumns } from "@/components/users-table-columns"
 import { useDeleteUser, useUsers } from "@/hooks/use-users"
+import { useTeams } from "@/hooks/use-teams"
 import type { User } from "@/lib/types"
 
 interface UsersViewProps {
@@ -25,6 +26,7 @@ interface UsersViewProps {
 
 export function UsersView({ currentUser }: UsersViewProps) {
   const { data: users = [], isLoading } = useUsers()
+  const { data: teams = [] } = useTeams()
   const deleteUserMutation = useDeleteUser()
 
   const [showFormModal, setShowFormModal] = useState(false)
@@ -58,8 +60,8 @@ export function UsersView({ currentUser }: UsersViewProps) {
   }
 
   const columns = useMemo(
-    () => createUsersColumns(currentUser, handleEdit, (user) => setDeletingUser(user), users),
-    [currentUser, users]
+    () => createUsersColumns(currentUser, handleEdit, (user) => setDeletingUser(user), users, teams),
+    [currentUser, users, teams]
   )
 
   if (isLoading) {
