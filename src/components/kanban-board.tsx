@@ -155,7 +155,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <Button onClick={() => setShowNewDealModal(true)} className="bg-accent hover:bg-accent/90 shadow-sm">
+              <Button onClick={() => setShowNewDealModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Nueva Negociación
               </Button>

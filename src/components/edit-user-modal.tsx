@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { User } from "@/lib/types"
+import { useUpdateUser } from "@/hooks/use-users"
 
 interface EditUserModalProps {
   isOpen: boolean
@@ -18,6 +19,8 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModalProps) {
+  const updateUser = useUpdateUser()
+
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
@@ -41,11 +44,31 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // In production, this would call an API
-    console.log("[v0] Updating user:", user.id, formData)
-    alert("Usuario actualizado exitosamente (demo)")
+    console.log("[EditUserModal] Updating user:", user.id)
 
-    onClose()
+    updateUser.mutate(
+      {
+        id: user.id,
+        data: {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          level: Number.parseInt(formData.level),
+          managerId: formData.managerId || null,
+          teamId: formData.teamId || null,
+        },
+      },
+      {
+        onSuccess: () => {
+          console.log("[EditUserModal] User updated successfully")
+          onClose()
+        },
+        onError: (error) => {
+          console.error("[EditUserModal] Error updating user:", error)
+          alert(error.message || "No se pudo actualizar el usuario")
+        },
+      }
+    )
   }
 
   return (
@@ -134,11 +157,21 @@ export function EditUserModal({ isOpen, onClose, user, allUsers }: EditUserModal
           </div>
 
           <div className="flex space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 bg-transparent"
+              disabled={updateUser.isPending}
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1">
-              Guardar Cambios
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={updateUser.isPending}
+            >
+              {updateUser.isPending ? "Guardando..." : "Guardar Cambios"}
             </Button>
           </div>
         </form>
