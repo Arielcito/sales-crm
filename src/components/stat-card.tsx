@@ -15,17 +15,17 @@ interface StatCardProps {
 export function StatCard({ title, description, value, icon: Icon, trend }: StatCardProps) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-3">
         <div>
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          {description && <CardDescription className="text-xs mt-1">{description}</CardDescription>}
+          <CardTitle className="text-xs font-medium">{title}</CardTitle>
+          {description && <CardDescription className="text-[10px] mt-0.5 leading-tight">{description}</CardDescription>}
         </div>
-        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        {Icon && <Icon className="h-3 w-3 text-muted-foreground" />}
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="px-3 pb-3">
+        <div className="text-base font-bold">{value}</div>
         {trend && (
-          <p className={`text-xs ${trend.isPositive ? "text-green-600" : "text-red-600"} mt-1`}>
+          <p className={`text-xs ${trend.isPositive ? "text-green-600" : "text-red-600"} mt-0.5`}>
             {trend.isPositive ? "+" : ""}{trend.value}% desde el mes pasado
           </p>
         )}

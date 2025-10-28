@@ -168,7 +168,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
             onCurrencyChange={setCurrency}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
             <StatCard
               title="Negociaciones Abiertas"
               description="En oportunidad, cotización, aprobación y OC"
