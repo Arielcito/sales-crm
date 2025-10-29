@@ -204,3 +204,14 @@ export const organizationBranding = pgTable("organizationBranding", {
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
+
+export const contactRequests = pgTable("contactRequest", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  phone: varchar("phone", { length: 50 }),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});

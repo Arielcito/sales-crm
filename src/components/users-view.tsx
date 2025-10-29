@@ -14,10 +14,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserFormModal } from "@/components/user-form-modal"
 import { createUsersColumns } from "@/components/users-table-columns"
 import { useDeleteUser, useUsers } from "@/hooks/use-users"
 import { useTeams } from "@/hooks/use-teams"
+import { OrgChart } from "@/components/users/org-chart"
+import { NewTeamModal } from "@/components/new-team-modal"
 import type { User } from "@/lib/types"
 
 interface UsersViewProps {
@@ -30,8 +33,11 @@ export function UsersView({ currentUser }: UsersViewProps) {
   const deleteUserMutation = useDeleteUser()
 
   const [showFormModal, setShowFormModal] = useState(false)
+  const [showTeamModal, setShowTeamModal] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
+  const [prefilledManagerId, setPrefilledManagerId] = useState<string | undefined>()
+  const [prefilledTeamId, setPrefilledTeamId] = useState<string | undefined>()
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => !user.id.includes("banned"))
@@ -57,6 +63,14 @@ export function UsersView({ currentUser }: UsersViewProps) {
   const handleCloseModal = () => {
     setShowFormModal(false)
     setEditingUser(null)
+    setPrefilledManagerId(undefined)
+    setPrefilledTeamId(undefined)
+  }
+
+  const handleCreateUser = (managerId?: string, teamId?: string) => {
+    setPrefilledManagerId(managerId)
+    setPrefilledTeamId(teamId)
+    setShowFormModal(true)
   }
 
   const columns = useMemo(
@@ -92,7 +106,27 @@ export function UsersView({ currentUser }: UsersViewProps) {
         </Button>
       </div>
 
-      <DataTable columns={columns} data={filteredUsers} searchKey="name" searchPlaceholder="Buscar por nombre..." />
+      <Tabs defaultValue="table" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="table">Tabla</TabsTrigger>
+          <TabsTrigger value="orgchart">Organigrama</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="table" className="mt-6">
+          <DataTable columns={columns} data={filteredUsers} searchKey="name" searchPlaceholder="Buscar por nombre..." />
+        </TabsContent>
+
+        <TabsContent value="orgchart" className="mt-6">
+          <OrgChart
+            users={filteredUsers}
+            teams={teams}
+            currentUser={currentUser}
+            onCreateUser={handleCreateUser}
+            onEditUser={handleEdit}
+            onCreateTeam={() => setShowTeamModal(true)}
+          />
+        </TabsContent>
+      </Tabs>
 
       {showFormModal && (
         <UserFormModal
@@ -100,6 +134,14 @@ export function UsersView({ currentUser }: UsersViewProps) {
           onClose={handleCloseModal}
           currentUser={currentUser}
           editingUser={editingUser}
+        />
+      )}
+
+      {showTeamModal && (
+        <NewTeamModal
+          isOpen={showTeamModal}
+          onClose={() => setShowTeamModal(false)}
+          currentUser={currentUser}
         />
       )}
 

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { updateTeam, deleteTeam } from "@/lib/services/team.service"
+import { updateTeam, deleteTeam, getTeamById } from "@/lib/services/team.service"
 import { getUserById } from "@/lib/services/user.service"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { z } from "zod"
+import { db } from "@/lib/db"
+import { users } from "@/lib/db/schema"
+import { eq } from "drizzle-orm"
 
 const updateTeamSchema = z.object({
   name: z.string().min(2).optional(),
@@ -88,10 +91,36 @@ export async function DELETE(
 
     const currentUser = await getUserById(session.user.id)
 
-    if (!currentUser || currentUser.level > 2) {
+    if (!currentUser || currentUser.level > 1) {
       return NextResponse.json(
-        { success: false, error: { code: "FORBIDDEN", message: "Solo niveles 1 y 2 pueden eliminar equipos" } },
+        { success: false, error: { code: "FORBIDDEN", message: "Solo nivel 1 puede eliminar equipos" } },
         { status: 403 }
+      )
+    }
+
+    const team = await getTeamById(id)
+    if (!team) {
+      return NextResponse.json(
+        { success: false, error: { code: "NOT_FOUND", message: "Equipo no encontrado" } },
+        { status: 404 }
+      )
+    }
+
+    const teamMembers = await db.query.users.findMany({
+      where: eq(users.teamId, id)
+    })
+
+    if (teamMembers.length > 0) {
+      console.log("[API /teams/:id] Team has members, cannot delete")
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "TEAM_HAS_MEMBERS",
+            message: `No se puede eliminar el equipo porque tiene ${teamMembers.length} miembro(s) asignado(s)`
+          }
+        },
+        { status: 400 }
       )
     }
 
@@ -99,7 +128,7 @@ export async function DELETE(
 
     console.log("[API /teams/:id] Team deleted:", id)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, data: { id } })
   } catch (error: unknown) {
     console.error("[API /teams/:id] Error:", error)
 

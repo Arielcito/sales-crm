@@ -163,7 +163,7 @@ export async function seedUsers() {
     console.log("1️⃣  Creating CEO...");
     createdUsers.lucas = await createUser({
       ...USERS_DATA[0],
-      teamId: ventasTeam.id,
+      teamId: null,
     });
     console.log(`   ✓ ${createdUsers.lucas.name} (${createdUsers.lucas.email})\n`);
 
@@ -171,14 +171,14 @@ export async function seedUsers() {
     console.log("2️⃣  Creating Managers...");
     createdUsers.juan = await createUser({
       ...USERS_DATA[1],
-      managerId: createdUsers.lucas.id,
+      managerId: null,
       teamId: ventasTeam.id,
     });
     console.log(`   ✓ ${createdUsers.juan.name} (${createdUsers.juan.email})`);
 
     createdUsers.ana = await createUser({
       ...USERS_DATA[2],
-      managerId: createdUsers.lucas.id,
+      managerId: null,
       teamId: comercialTeam.id,
     });
     console.log(`   ✓ ${createdUsers.ana.name} (${createdUsers.ana.email})\n`);
@@ -235,13 +235,15 @@ export async function seedUsers() {
     console.log("✅ Users seeded successfully!\n");
     console.log("📊 Hierarchy structure:");
     console.log(`
-    Lucas Palazzo (CEO - Level 1) [No Team]
-    ├── Juan Pérez (Gerente de Ventas - Level 2) [Ventas - LEADER]
-    │   ├── María García (Vendedor Senior - Level 3) [Ventas]
-    │   └── Carlos López (Vendedor Junior - Level 4) [Ventas]
-    └── Ana Martínez (Gerente Comercial - Level 2) [Comercial - LEADER]
-        ├── Pedro Rodríguez (Vendedor Senior - Level 3) [Comercial]
-        └── Laura Sánchez (Vendedor Junior - Level 4) [Comercial]
+    Lucas Palazzo (CEO - Level 1) [Sin Equipo]
+
+    Juan Pérez (Gerente de Ventas - Level 2) [Ventas - LEADER]
+    ├── María García (Vendedor Senior - Level 3) [Ventas]
+    └── Carlos López (Vendedor Junior - Level 4) [Ventas]
+
+    Ana Martínez (Gerente Comercial - Level 2) [Comercial - LEADER]
+    ├── Pedro Rodríguez (Vendedor Senior - Level 3) [Comercial]
+    └── Laura Sánchez (Vendedor Junior - Level 4) [Comercial]
     `);
 
     console.log("\n🔑 Login credentials (all users have the same password):");

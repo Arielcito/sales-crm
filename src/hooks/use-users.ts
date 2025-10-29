@@ -166,3 +166,39 @@ export function useDeleteUser() {
     },
   })
 }
+
+export function useReassignUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      managerId,
+      teamId,
+    }: {
+      id: string
+      managerId?: string | null
+      teamId?: string | null
+    }) => {
+      console.log("[useReassignUser] Reassigning user:", id)
+      const response = await fetch(`/api/users/${id}/reassign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ managerId, teamId }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error?.message || "Error al reasignar usuario")
+      }
+
+      return result.data as User
+    },
+    onSuccess: () => {
+      console.log("[useReassignUser] User reassigned, invalidating queries")
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["visible-users"] })
+    },
+  })
+}
