@@ -17,11 +17,12 @@ export interface DashboardStats {
 interface UseDashboardStatsParams {
   dateRange?: DateRange
   currency: Currency
+  teamLeaderId?: string
 }
 
-export function useDashboardStats({ dateRange, currency }: UseDashboardStatsParams) {
+export function useDashboardStats({ dateRange, currency, teamLeaderId }: UseDashboardStatsParams) {
   return useQuery({
-    queryKey: ["dashboard", "stats", dateRange?.from, dateRange?.to, currency],
+    queryKey: ["dashboard", "stats", dateRange?.from, dateRange?.to, currency, teamLeaderId],
     queryFn: async () => {
       const params = new URLSearchParams()
 
@@ -32,6 +33,10 @@ export function useDashboardStats({ dateRange, currency }: UseDashboardStatsPara
         params.append("to", dateRange.to.toISOString())
       }
       params.append("currency", currency)
+
+      if (teamLeaderId && teamLeaderId !== "all") {
+        params.append("teamLeaderId", teamLeaderId)
+      }
 
       return await apiClient<DashboardStatsExtended>(`/api/dashboard/stats?${params.toString()}`)
     },

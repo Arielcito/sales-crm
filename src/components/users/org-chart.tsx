@@ -120,57 +120,110 @@ export function OrgChart({
     )
   }
 
-  const renderNode = (node: OrgChartNode, index: number) => {
-    const isDragging = draggedUser?.id === node.user.id
-    const isOver = dropTarget?.id === node.user.id
+  const renderUserCard = (user: User) => {
+    const isDragging = draggedUser?.id === user.id
+    const isOver = dropTarget?.id === user.id
     const canDrop = draggedUser
-      ? canReassignUser(draggedUser, node.user, currentUser).valid
+      ? canReassignUser(draggedUser, user, currentUser).valid
       : false
 
+    const node: OrgChartNode = {
+      user,
+      children: [],
+      depth: 0,
+      position: 0,
+    }
+
     return (
-      <div key={node.user.id} className="flex flex-col items-center gap-4">
-        <div
-          draggable={node.user.level > 1}
-          onDragStart={() => handleDragStart(node.user)}
-          onDragOver={(e) => handleDragOver(e, node.user)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, node.user)}
-          className="relative"
-        >
-          <OrgChartNodeComponent
-            node={node}
-            onNodeClick={handleNodeClick}
-            isDragging={isDragging}
-            isOver={isOver}
-            canDrop={canDrop}
-          />
+      <div
+        key={user.id}
+        draggable={user.level > 1}
+        onDragStart={() => handleDragStart(user)}
+        onDragOver={(e) => handleDragOver(e, user)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, user)}
+        className="relative"
+      >
+        <OrgChartNodeComponent
+          node={node}
+          onNodeClick={handleNodeClick}
+          isDragging={isDragging}
+          isOver={isOver}
+          canDrop={canDrop}
+        />
 
-          {node.user.level === 2 && currentUser.level <= 2 && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-2 w-full"
-              onClick={(e) => {
-                e.stopPropagation()
-                onCreateUser?.(node.user.id, node.user.teamId || undefined)
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar subordinado
-            </Button>
-          )}
-        </div>
-
-        {node.children.length > 0 && (
-          <div className="flex flex-col items-center gap-2 pl-8 border-l-2 border-gray-200">
-            <div className="flex flex-wrap gap-6 justify-center">
-              {node.children.map((child, idx) => renderNode(child, idx))}
-            </div>
-          </div>
+        {user.level === 2 && currentUser.level <= 2 && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-2 w-full"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCreateUser?.(user.id, user.teamId || undefined)
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar subordinado
+          </Button>
         )}
       </div>
     )
   }
+
+  const level2Groups = useMemo(() => {
+    const groups: Array<{
+      level2User: User
+      level3Users: User[]
+      level4Users: User[]
+      team: Team | null
+    }> = []
+
+    filteredTree.forEach(rootNode => {
+      const collectLevel2 = (node: OrgChartNode) => {
+        if (node.user.level === 2) {
+          const level3Users: User[] = []
+          const level4Users: User[] = []
+
+          node.children.forEach(child => {
+            console.log("[OrgChart] Processing child:", child.user.name, "level:", child.user.level, "children:", child.children.length)
+
+            if (child.user.level === 3) {
+              level3Users.push(child.user)
+
+              child.children.forEach(grandchild => {
+                console.log("[OrgChart] Processing grandchild:", grandchild.user.name, "level:", grandchild.user.level)
+                if (grandchild.user.level === 4) {
+                  level4Users.push(grandchild.user)
+                }
+              })
+            } else if (child.user.level === 4) {
+              console.log("[OrgChart] Found direct level 4 under level 2:", child.user.name)
+              level4Users.push(child.user)
+            }
+          })
+
+          console.log("[OrgChart] Summary for", node.user.name, "- Level 3:", level3Users.length, "Level 4:", level4Users.length)
+
+          groups.push({
+            level2User: node.user,
+            level3Users,
+            level4Users,
+            team: node.user.teamId ? teams.find(t => t.id === node.user.teamId) || null : null,
+          })
+        }
+
+        node.children.forEach(collectLevel2)
+      }
+
+      if (rootNode.user.level === 1) {
+        rootNode.children.forEach(collectLevel2)
+      } else {
+        collectLevel2(rootNode)
+      }
+    })
+
+    return groups
+  }, [filteredTree, teams])
 
   const selectedManager = selectedNode?.user.managerId
     ? users.find(u => u.id === selectedNode.user.managerId)
@@ -214,9 +267,52 @@ export function OrgChart({
           <p className="text-muted-foreground">No hay usuarios para mostrar</p>
         </Card>
       ) : (
-        <div className="overflow-x-auto pb-8">
-          <div className="inline-flex flex-col gap-8 min-w-full items-center pt-4">
-            {filteredTree.map((root, idx) => renderNode(root, idx))}
+        <div className="space-y-8">
+          {filteredTree.filter(node => node.user.level === 1).map((rootNode) => (
+            <div key={rootNode.user.id} className="flex justify-center">
+              {renderUserCard(rootNode.user)}
+            </div>
+          ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {level2Groups.map((group) => (
+              <Card key={group.level2User.id} className="p-6 flex flex-col gap-6">
+                <div className="text-center border-b pb-3">
+                  <h3 className="font-semibold text-lg">
+                    {group.team?.name || "Equipo de " + group.level2User.name.split(" ")[0]}
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Manager
+                  </div>
+                  {renderUserCard(group.level2User)}
+                </div>
+
+                {group.level3Users.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Supervisores
+                    </div>
+                    {group.level3Users.map(user => (
+                      <div key={user.id}>{renderUserCard(user)}</div>
+                    ))}
+                  </div>
+                )}
+
+                {group.level4Users.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Empleados
+                    </div>
+                    {group.level4Users.map(user => (
+                      <div key={user.id}>{renderUserCard(user)}</div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
         </div>
       )}

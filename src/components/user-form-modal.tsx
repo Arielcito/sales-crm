@@ -16,9 +16,11 @@ interface UserFormModalProps {
   onClose: () => void
   currentUser: User
   editingUser?: User | null
+  prefilledManagerId?: string
+  prefilledTeamId?: string
 }
 
-export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: UserFormModalProps) {
+export function UserFormModal({ isOpen, onClose, currentUser, editingUser, prefilledManagerId, prefilledTeamId }: UserFormModalProps) {
   const { data: allUsers = [] } = useUsers()
   const { data: teams = [] } = useTeams()
   const createUserMutation = useCreateUser()
@@ -52,11 +54,11 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser }: Use
         password: "",
         role: "",
         level: "",
-        managerId: "",
-        teamId: "",
+        managerId: prefilledManagerId || "",
+        teamId: prefilledTeamId || "",
       })
     }
-  }, [editingUser, isOpen])
+  }, [editingUser, isOpen, prefilledManagerId, prefilledTeamId])
 
   const availableLevels = getAvailableLevels(currentUser.level)
   const selectedLevel = Number.parseInt(formData.level || "4")

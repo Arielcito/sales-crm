@@ -8,6 +8,7 @@ import type { Currency } from "@/lib/types"
 export interface DashboardFilters {
   dateRange: DateRange | undefined
   currency: Currency
+  selectedTeamLeaderId: string
 }
 
 export function useDashboardFilters() {
@@ -21,11 +22,14 @@ export function useDashboardFilters() {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultDateRange)
   const [currency, setCurrency] = useState<Currency>("USD")
+  const [selectedTeamLeaderId, setSelectedTeamLeaderId] = useState<string>("all")
 
   return {
     dateRange,
     setDateRange,
     currency,
     setCurrency,
+    selectedTeamLeaderId,
+    setSelectedTeamLeaderId,
   }
 }

@@ -9,6 +9,7 @@ import { PendingRequestsCard } from "@/components/pending-requests-card"
 import { TrendingUp, Briefcase, CheckCircle2, XCircle } from "lucide-react"
 import { useDashboardStats } from "@/hooks/use-dashboard-data"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
+import { useTeamLeaders } from "@/hooks/use-teams"
 import type { User } from "@/lib/types"
 
 interface DashboardProps {
@@ -16,8 +17,9 @@ interface DashboardProps {
 }
 
 export function Dashboard({ currentUser }: DashboardProps) {
-  const { dateRange, setDateRange, currency, setCurrency } = useDashboardFilters()
-  const { data: stats, isLoading, error } = useDashboardStats({ dateRange, currency })
+  const { dateRange, setDateRange, currency, setCurrency, selectedTeamLeaderId, setSelectedTeamLeaderId } = useDashboardFilters()
+  const { data: stats, isLoading, error } = useDashboardStats({ dateRange, currency, teamLeaderId: selectedTeamLeaderId })
+  const { data: teamLeaders } = useTeamLeaders()
 
   if (isLoading) {
     return <DashboardSkeleton />
@@ -60,6 +62,10 @@ export function Dashboard({ currentUser }: DashboardProps) {
         onDateRangeChange={setDateRange}
         currency={currency}
         onCurrencyChange={setCurrency}
+        selectedTeamLeaderId={selectedTeamLeaderId}
+        onTeamLeaderChange={setSelectedTeamLeaderId}
+        teamLeaders={teamLeaders}
+        showTeamFilter={currentUser.level === 1}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

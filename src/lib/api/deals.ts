@@ -2,9 +2,10 @@ import { apiClient } from "./client"
 import type { Deal } from "@/lib/types"
 import type { CreateDealInput, UpdateDealInput } from "@/lib/schemas/deal"
 
-export async function getDeals(userId?: string): Promise<Deal[]> {
+export async function getDeals(userId?: string, teamId?: string): Promise<Deal[]> {
   const params = new URLSearchParams()
   if (userId) params.set("userId", userId)
+  if (teamId) params.set("teamId", teamId)
 
   const url = `/api/deals${params.toString() ? `?${params.toString()}` : ""}`
   return apiClient<Deal[]>(url)

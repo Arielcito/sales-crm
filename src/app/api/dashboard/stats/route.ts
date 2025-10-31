@@ -51,10 +51,23 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get("from")
     const toDate = searchParams.get("to")
     const currency = searchParams.get("currency") || "USD"
+    const teamLeaderId = searchParams.get("teamLeaderId")
 
-    console.log("[API /dashboard/stats] Filters - from:", fromDate, "to:", toDate, "currency:", currency)
+    console.log("[API /dashboard/stats] Filters - from:", fromDate, "to:", toDate, "currency:", currency, "teamLeaderId:", teamLeaderId)
 
-    const visibleUsers = await getUsersByLevel(currentUser)
+    let visibleUsers = await getUsersByLevel(currentUser)
+
+    if (teamLeaderId) {
+      const teamLeader = visibleUsers.find(u => u.id === teamLeaderId)
+      if (teamLeader && teamLeader.teamId) {
+        visibleUsers = visibleUsers.filter(u => u.teamId === teamLeader.teamId)
+        console.log("[API /dashboard/stats] Filtered by team leader:", teamLeaderId, "team:", teamLeader.teamId)
+      } else if (teamLeader) {
+        visibleUsers = [teamLeader]
+        console.log("[API /dashboard/stats] Leader has no team, showing only leader's deals")
+      }
+    }
+
     const visibleUserIds = visibleUsers.map(u => u.id)
 
     console.log("[API /dashboard/stats] Visible users:", visibleUserIds.length)

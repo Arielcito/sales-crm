@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { ZodError } from "zod"
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     console.log("[API /deals] GET request received")
 
@@ -30,12 +30,31 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    console.log("[API /deals] Fetching deals for user level:", currentUser.level)
+    const searchParams = request.nextUrl.searchParams
+    const teamIdFilter = searchParams.get("teamId")
 
-    const visibleUsers = await getUsersByLevel(currentUser)
-    const visibleUserIds = visibleUsers.map(u => u.id)
+    console.log("[API /deals] Fetching deals for user level:", currentUser.level, "teamId filter:", teamIdFilter)
 
-    console.log("[API /deals] Visible users:", visibleUserIds.length)
+    let visibleUserIds: string[] = []
+
+    if (currentUser.level === 1) {
+      if (teamIdFilter && teamIdFilter !== "all") {
+        const allUsers = await getUsersByLevel(currentUser)
+        visibleUserIds = allUsers.filter(u => u.teamId === teamIdFilter).map(u => u.id)
+        console.log("[API /deals] Level 1 filtering by team:", teamIdFilter, "users:", visibleUserIds.length)
+      } else {
+        const allUsers = await getUsersByLevel(currentUser)
+        visibleUserIds = allUsers.map(u => u.id)
+        console.log("[API /deals] Level 1 seeing all users:", visibleUserIds.length)
+      }
+    } else if (currentUser.level === 2) {
+      const teamUsers = await getUsersByLevel(currentUser)
+      visibleUserIds = teamUsers.map(u => u.id)
+      console.log("[API /deals] Level 2 seeing team users:", visibleUserIds.length)
+    } else if (currentUser.level >= 3) {
+      visibleUserIds = [currentUser.id]
+      console.log("[API /deals] Level 3-4 seeing only own deals")
+    }
 
     const deals = await getAllDeals({ userIds: visibleUserIds })
 

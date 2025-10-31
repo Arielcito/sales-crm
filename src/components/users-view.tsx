@@ -134,6 +134,8 @@ export function UsersView({ currentUser }: UsersViewProps) {
           onClose={handleCloseModal}
           currentUser={currentUser}
           editingUser={editingUser}
+          prefilledManagerId={prefilledManagerId}
+          prefilledTeamId={prefilledTeamId}
         />
       )}
 

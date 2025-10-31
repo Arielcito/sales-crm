@@ -2,13 +2,11 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from "lucide-react"
-import type { Deal, User, Currency, DealStage } from "@/lib/types"
+import { Plus } from "lucide-react"
+import type { Deal, User, DealStage } from "@/lib/types"
 import { DealModal } from "./deal-modal"
-import { CurrencyToggle } from "./currency-toggle"
 import { NewDealModal } from "./new-deal-modal"
 import { KanbanSkeleton } from "./kanban-skeleton"
 import { DashboardFilters } from "./dashboard-filters"
@@ -16,10 +14,12 @@ import { StageSettingsMenu } from "./stage-settings-menu"
 import { EditStageModal } from "./edit-stage-modal"
 import { CreateStageModal } from "./create-stage-modal"
 import { StatCard } from "./stat-card"
+import { KanbanDealCard } from "./kanban-deal-card"
 import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
 import { useToggleStageActive } from "@/hooks/use-deal-stages"
 import { useDashboardStats } from "@/hooks/use-dashboard-data"
+import { useTeamLeaders } from "@/hooks/use-teams"
 import { TrendingUp, Briefcase, CheckCircle2, XCircle } from "lucide-react"
 
 interface KanbanBoardProps {
@@ -31,11 +31,12 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ currentUser, stages, companies, contacts, users }: KanbanBoardProps) {
-  const { data: deals = [], isLoading } = useDeals()
+  const { dateRange, setDateRange, currency, setCurrency, selectedTeamLeaderId, setSelectedTeamLeaderId } = useDashboardFilters()
+  const { data: deals = [], isLoading } = useDeals(undefined, selectedTeamLeaderId === "all" ? undefined : selectedTeamLeaderId)
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
   const { mutate: toggleStageActive } = useToggleStageActive()
-  const { dateRange, setDateRange, currency, setCurrency } = useDashboardFilters()
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats({ dateRange, currency })
+  const { data: teamLeaders = [] } = useTeamLeaders()
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
@@ -166,6 +167,10 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
             onDateRangeChange={setDateRange}
             currency={currency}
             onCurrencyChange={setCurrency}
+            selectedTeamLeaderId={selectedTeamLeaderId}
+            onTeamLeaderChange={setSelectedTeamLeaderId}
+            teamLeaders={teamLeaders}
+            showTeamFilter={currentUser.level === 1}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
@@ -226,17 +231,15 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
 
               const isDropTarget = dragOverStage === stage.id
 
+              const handleColumnDragOver = (e: React.DragEvent) => handleDragOver(e, stage.id)
+              const handleColumnDrop = (e: React.DragEvent) => handleDrop(e, stage.id)
+
               return (
                 <div
                   key={stage.id}
                   className={`nexus-card flex flex-col w-80 flex-shrink-0 bg-muted/30 transition-all duration-200 ${
                     isDropTarget ? "ring-2 ring-primary ring-offset-2 bg-primary/5" : ""
                   }`}
-                  onDragOver={(e) => handleDragOver(e, stage.id)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, stage.id)}
-                  role="button"
-                  tabIndex={0}
                 >
                   <div className="p-4 border-b border-border/50 flex-shrink-0 bg-card">
                     <div className="flex items-center justify-between mb-2">
@@ -270,106 +273,38 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-3">
+                  <section
+                    className="flex-1 overflow-y-auto p-3"
+                    onDragOver={handleColumnDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleColumnDrop}
+                    aria-label={`Zona de drop para ${stage.name}`}
+                  >
                     <div className="space-y-3">
                       {stageDeals.map((deal) => {
                         const responsibleUser = getUser(deal.userId)
-                        const isOverdue = deal.expectedCloseDate && new Date(deal.expectedCloseDate) < new Date()
-                        const amount = deal.currency === "USD"
-                          ? (deal.amountUsd || 0)
-                          : (deal.amountArs || 0)
                         const isBeingDragged = draggedDeal?.id === deal.id
                         const isOptimistic = optimisticDealId === deal.id
                         const isDealUpdating = isUpdating && isOptimistic
 
                         return (
-                          <Card
+                          <KanbanDealCard
                             key={deal.id}
-                            className={`cursor-pointer border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card ${
-                              isBeingDragged ? "opacity-40 scale-95" : ""
-                            } ${
-                              isOptimistic ? "ring-2 ring-primary/50 animate-pulse" : ""
-                            }`}
-                            draggable={!isDealUpdating}
-                            onDragStart={(e) => handleDragStart(e, deal)}
+                            deal={deal}
+                            currency={currency}
+                            isBeingDragged={isBeingDragged}
+                            isOptimistic={isOptimistic}
+                            isDealUpdating={isDealUpdating}
+                            responsibleUserName={responsibleUser?.name}
+                            companyName={getCompanyName(deal.companyId)}
+                            contactName={getContactName(deal.contactId)}
+                            onDragStart={handleDragStart}
                             onClick={() => !isBeingDragged && setSelectedDeal(deal)}
-                          >
-                            <CardContent className="p-4 relative">
-                              {isDealUpdating && (
-                                <div className="absolute top-2 right-2">
-                                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                                </div>
-                              )}
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-sm leading-tight line-clamp-2">
-                                  {deal.title}
-                                </h4>
-
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-lg text-primary">
-                                    {new Intl.NumberFormat("en-US", {
-                                      style: "currency",
-                                      currency: deal.currency,
-                                      minimumFractionDigits: 0,
-                                      maximumFractionDigits: 0,
-                                    }).format(amount)}
-                                  </span>
-                                  {deal.currency !== currency && (
-                                    <Badge variant="outline" className="text-xs border-primary/20 text-primary">
-                                      {deal.currency}
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                <div className="text-xs text-muted-foreground space-y-1">
-                                  <div className="font-medium text-foreground">{getCompanyName(deal.companyId)}</div>
-                                  <div>{getContactName(deal.contactId)}</div>
-                                </div>
-
-                                {deal.dollarRate && (
-                                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                    <div className="text-xs text-muted-foreground">
-                                      Cotización USD
-                                    </div>
-                                    <div className="text-xs font-semibold text-primary">
-                                      ${new Intl.NumberFormat("es-AR", {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      }).format(deal.dollarRate)}
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                                  <div className="text-xs font-medium text-muted-foreground">
-                                    {responsibleUser?.name}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {new Date(deal.createdAt).toLocaleDateString("es-AR")}
-                                  </div>
-                                </div>
-
-                                {deal.expectedCloseDate && (
-                                  <div className="flex items-center justify-between pt-1">
-                                    <div className="text-xs text-muted-foreground">
-                                      Fecha límite
-                                    </div>
-                                    <div
-                                      className={`text-xs font-medium px-2 py-1 rounded-md ${
-                                        isOverdue ? "bg-red-50 text-red-600" : "bg-muted text-muted-foreground"
-                                      }`}
-                                    >
-                                      {new Date(deal.expectedCloseDate).toLocaleDateString("es-AR")}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
+                          />
                         )
                       })}
                     </div>
-                  </div>
+                  </section>
                 </div>
               )
             })}

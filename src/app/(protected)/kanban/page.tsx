@@ -30,6 +30,7 @@ export default function KanbanPage() {
   }
 
   return (
+    <div className="h-full overflow-hidden">  
     <KanbanBoard
       currentUser={currentUser}
       stages={stages}
@@ -37,5 +38,6 @@ export default function KanbanPage() {
       contacts={contacts}
       users={users}
     />
+    </div>
   )
 }

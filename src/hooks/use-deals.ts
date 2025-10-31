@@ -6,10 +6,10 @@ import { getDeals, getDealById, createDeal, updateDeal, deleteDeal } from "@/lib
 import type { CreateDealInput, UpdateDealInput } from "@/lib/schemas/deal"
 import type { Deal } from "@/lib/types"
 
-export function useDeals(userId?: string) {
+export function useDeals(userId?: string, teamId?: string) {
   return useQuery({
-    queryKey: ["deals", userId],
-    queryFn: () => getDeals(userId),
+    queryKey: ["deals", userId, teamId],
+    queryFn: () => getDeals(userId, teamId),
     staleTime: 1000 * 60,
   })
 }
