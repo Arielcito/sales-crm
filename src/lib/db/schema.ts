@@ -178,6 +178,7 @@ export const companyRequests = pgTable("companyRequest", {
   requestedBy: uuid("requestedBy")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  companyId: uuid("companyId").references(() => companies.id, { onDelete: "cascade" }),
   companyName: text("companyName").notNull(),
   email: text("email"),
   phone: varchar("phone", { length: 50 }),

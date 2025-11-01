@@ -7,6 +7,7 @@ import { useDealStages } from "@/hooks/use-deal-stages"
 import { useCompanies } from "@/hooks/use-companies"
 import { useContacts } from "@/hooks/use-contacts"
 import { useUsers } from "@/hooks/use-users"
+import { useTeams } from "@/hooks/use-teams"
 
 export default function KanbanPage() {
   const { data: currentUser, isLoading: isLoadingUser } = useCurrentUser()
@@ -14,8 +15,9 @@ export default function KanbanPage() {
   const { data: companies = [], isLoading: isLoadingCompanies } = useCompanies()
   const { data: contacts = [], isLoading: isLoadingContacts } = useContacts()
   const { data: users = [], isLoading: isLoadingUsers } = useUsers()
+  const { data: teams = [], isLoading: isLoadingTeams } = useTeams()
 
-  const isLoading = isLoadingUser || isLoadingStages || isLoadingCompanies || isLoadingContacts || isLoadingUsers
+  const isLoading = isLoadingUser || isLoadingStages || isLoadingCompanies || isLoadingContacts || isLoadingUsers || isLoadingTeams
 
   if (isLoading) {
     return <KanbanSkeleton />
@@ -30,13 +32,14 @@ export default function KanbanPage() {
   }
 
   return (
-    <div className="h-full overflow-hidden">  
+    <div className="h-full overflow-hidden">
     <KanbanBoard
       currentUser={currentUser}
       stages={stages}
       companies={companies}
       contacts={contacts}
       users={users}
+      teams={teams}
     />
     </div>
   )

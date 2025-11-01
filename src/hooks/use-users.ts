@@ -50,6 +50,7 @@ export function useCreateUser() {
       console.log("[useCreateUser] User created, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
     },
   })
 }
@@ -110,6 +111,7 @@ export function useUpdateUser() {
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
       queryClient.invalidateQueries({ queryKey: ["current-user"] })
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
     },
   })
 }
@@ -163,6 +165,7 @@ export function useDeleteUser() {
       console.log("[useDeleteUser] User deleted, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
     },
   })
 }
@@ -199,6 +202,7 @@ export function useReassignUser() {
       console.log("[useReassignUser] User reassigned, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
     },
   })
 }

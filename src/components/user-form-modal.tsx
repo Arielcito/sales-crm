@@ -66,7 +66,12 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser, prefi
   const availableManagers = allUsers.filter((user) => {
     if (user.id === editingUser?.id) return false
 
-    if (selectedLevel === 3 || selectedLevel === 4) {
+    if (selectedLevel === 4) {
+      if (!formData.teamId) return false
+      return (user.level === 2 || user.level === 3) && user.teamId === formData.teamId
+    }
+
+    if (selectedLevel === 3) {
       if (!formData.teamId) return false
       return user.level === 2 && user.teamId === formData.teamId
     }
@@ -218,25 +223,27 @@ export function UserFormModal({ isOpen, onClose, currentUser, editingUser, prefi
 
           {(selectedLevel === 3 || selectedLevel === 4) && formData.teamId && (
             <div>
-              <Label htmlFor="manager">Líder de Equipo (Manager) *</Label>
+              <Label htmlFor="manager">
+                {selectedLevel === 3 ? "Líder de Equipo (Nivel 2) *" : "Manager Directo (Nivel 2 o 3) *"}
+              </Label>
               <Select
                 value={formData.managerId || "none"}
                 onValueChange={(value) => setFormData({ ...formData, managerId: value === "none" ? "" : value })}
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar líder de equipo *" />
+                  <SelectValue placeholder={selectedLevel === 3 ? "Seleccionar líder de equipo *" : "Seleccionar manager *"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none" disabled>Seleccionar líder</SelectItem>
+                  <SelectItem value="none" disabled>Seleccionar {selectedLevel === 3 ? "líder" : "manager"}</SelectItem>
                   {availableManagers.length === 0 && (
                     <SelectItem value="no-leaders" disabled>
-                      No hay líderes nivel 2 en este equipo
+                      {selectedLevel === 3 ? "No hay líderes nivel 2 en este equipo" : "No hay managers disponibles en este equipo"}
                     </SelectItem>
                   )}
                   {availableManagers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
-                      {user.name} ({user.role})
+                      {user.name} - Nivel {user.level} ({user.role})
                     </SelectItem>
                   ))}
                 </SelectContent>

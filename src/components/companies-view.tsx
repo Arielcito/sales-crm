@@ -13,7 +13,7 @@ import { NewCompanyModal } from "@/components/new-company-modal"
 import { NewContactModal } from "@/components/new-contact-modal"
 import { EditCompanyModal } from "@/components/edit-company-modal"
 import { EditContactModal } from "@/components/edit-contact-modal"
-import { CompanyRequestModal } from "@/components/company-request-modal"
+import { CompanySelectionModal } from "@/components/company-selection-modal"
 import { CompaniesSkeleton } from "@/components/companies-skeleton"
 import {
   AlertDialog,
@@ -39,7 +39,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false)
   const [showNewContactModal, setShowNewContactModal] = useState(false)
-  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [showCompanySelectionModal, setShowCompanySelectionModal] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
@@ -118,7 +118,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
             Nueva Empresa
           </Button>
         ) : (
-          <Button onClick={() => setShowRequestModal(true)} className="gap-2" variant="outline">
+          <Button onClick={() => setShowCompanySelectionModal(true)} className="gap-2" variant="outline">
             <Plus className="w-4 h-4" />
             Solicitar Empresa
           </Button>
@@ -262,11 +262,13 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
         <NewCompanyModal onClose={() => setShowNewCompanyModal(false)} onSuccess={handleCompanyCreated} />
       )}
 
-      {showRequestModal && (
-        <CompanyRequestModal
-          isOpen={showRequestModal}
-          onClose={() => setShowRequestModal(false)}
-          onSuccess={() => setShowRequestModal(false)}
+      {showCompanySelectionModal && (
+        <CompanySelectionModal
+          isOpen={showCompanySelectionModal}
+          onClose={() => setShowCompanySelectionModal(false)}
+          onSuccess={() => setShowCompanySelectionModal(false)}
+          companies={companies}
+          contacts={contacts}
         />
       )}
 

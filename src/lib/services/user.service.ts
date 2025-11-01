@@ -132,13 +132,13 @@ export async function validateManagerAssignment(userId: string, managerId: strin
     return { valid: true }
   }
 
-  if (userLevel === 3 || userLevel === 4) {
+  if (userLevel === 3) {
     if (!managerId) {
-      return { valid: false, error: "Levels 3 and 4 must have a manager assigned" }
+      return { valid: false, error: "Level 3 must have a manager assigned" }
     }
 
     if (!teamId) {
-      return { valid: false, error: "Levels 3 and 4 must be assigned to a team" }
+      return { valid: false, error: "Level 3 must be assigned to a team" }
     }
 
     const manager = await getUserById(managerId)
@@ -152,7 +152,35 @@ export async function validateManagerAssignment(userId: string, managerId: strin
     }
 
     if (manager.level !== 2) {
-      return { valid: false, error: "Levels 3 and 4 must report to a Level 2 (Team Leader)" }
+      return { valid: false, error: "Level 3 must report to a Level 2 (Team Leader)" }
+    }
+  }
+
+  if (userLevel === 4) {
+    if (!managerId) {
+      return { valid: false, error: "Level 4 must have a manager assigned" }
+    }
+
+    if (!teamId) {
+      return { valid: false, error: "Level 4 must be assigned to a team" }
+    }
+
+    const manager = await getUserById(managerId)
+
+    if (!manager) {
+      return { valid: false, error: "Manager not found" }
+    }
+
+    if (manager.id === userId) {
+      return { valid: false, error: "User cannot be their own manager" }
+    }
+
+    if (manager.level !== 2 && manager.level !== 3) {
+      return { valid: false, error: "Level 4 must report to a Level 2 (Team Leader) or Level 3 (Supervisor)" }
+    }
+
+    if (manager.teamId !== teamId) {
+      return { valid: false, error: "Manager must be from the same team" }
     }
   }
 

@@ -8,17 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     try {
@@ -26,10 +25,11 @@ export default function SignInPage() {
         email,
         password,
       });
+      toast.success("Sesión iniciada correctamente");
       router.push("/dashboard");
     } catch (err) {
-      setError("Correo electrónico o contraseña inválidos");
-      console.error("Error en inicio de sesión:", err);
+      toast.error("Correo electrónico o contraseña inválidos");
+      console.error("[Auth] Error en inicio de sesión:", err);
     } finally {
       setLoading(false);
     }
@@ -74,11 +74,6 @@ export default function SignInPage() {
                 required
               />
             </div>
-            {error && (
-              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
-                {error}
-              </div>
-            )}
             <Button
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-ring"

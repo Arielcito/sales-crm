@@ -14,6 +14,7 @@ export const createCompanySchema = z.object({
 })
 
 export const createCompanyRequestSchema = z.object({
+  companyId: z.string().uuid().optional().nullable(),
   companyName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   industry: z.string().optional(),
   website: z.string().optional(),

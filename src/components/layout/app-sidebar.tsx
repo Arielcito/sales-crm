@@ -44,7 +44,12 @@ export function AppSidebar() {
     { id: "kanban", label: "Pipeline de Ventas", icon: Kanban },
     { id: "companies", label: "Empresas y Contactos", icon: Building2 },
     { id: "users", label: "Gestión de Usuarios", icon: Users, levelRequired: 1 },
-    { id: "teams", label: "Gestión de Equipos", icon: UsersRound, levelRequired: 2 },
+    {
+      id: "teams",
+      label: currentUser?.level === 3 ? "Mi Equipo" : "Gestión de Equipos",
+      icon: UsersRound,
+      levelRequired: undefined
+    },
     { id: "settings/branding", label: "Personalización", icon: Palette, levelRequired: 1 },
     { id: "currency", label: "Cotizaciones", icon: Settings },
   ]
@@ -97,6 +102,10 @@ export function AppSidebar() {
             <SidebarMenu className="space-y-1">
               {navigationItems.map((item) => {
                 if (item.levelRequired && currentUser && currentUser.level !== item.levelRequired) {
+                  return null
+                }
+
+                if (item.id === "teams" && currentUser && currentUser.level > 3) {
                   return null
                 }
 

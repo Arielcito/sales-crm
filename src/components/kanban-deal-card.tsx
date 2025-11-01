@@ -13,6 +13,8 @@ interface KanbanDealCardProps {
   isOptimistic: boolean
   isDealUpdating: boolean
   responsibleUserName?: string
+  responsibleUserLevel?: number
+  responsibleUserTeamName?: string
   companyName: string
   contactName: string
   onDragStart: (e: React.DragEvent, deal: Deal) => void
@@ -26,6 +28,8 @@ export function KanbanDealCard({
   isOptimistic,
   isDealUpdating,
   responsibleUserName,
+  responsibleUserLevel,
+  responsibleUserTeamName,
   companyName,
   contactName,
   onDragStart,
@@ -57,6 +61,8 @@ export function KanbanDealCard({
           {responsibleUserName && (
             <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
               {responsibleUserName}
+              {responsibleUserLevel && ` (Nivel ${responsibleUserLevel})`}
+              {responsibleUserTeamName && ` - ${responsibleUserTeamName}`}
             </Badge>
           )}
           <h4 className="font-semibold text-sm leading-tight line-clamp-2">

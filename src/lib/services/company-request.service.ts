@@ -13,6 +13,7 @@ export async function getAllCompanyRequests(): Promise<CompanyRequest[]> {
   return result.map(request => ({
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,
@@ -40,6 +41,7 @@ export async function getPendingCompanyRequests(): Promise<CompanyRequest[]> {
   return result.map(request => ({
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,
@@ -69,6 +71,7 @@ export async function getCompanyRequestById(id: string): Promise<CompanyRequest 
   return {
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,
@@ -84,6 +87,7 @@ export async function getCompanyRequestById(id: string): Promise<CompanyRequest 
 }
 
 interface CreateCompanyRequestData {
+  companyId?: string | null
   companyName: string
   industry?: string
   website?: string
@@ -96,6 +100,7 @@ export async function createCompanyRequest(data: CreateCompanyRequestData, reque
   console.log("[company-request.service] Creating company request:", data.companyName, "by:", requestedBy)
 
   const result = await db.insert(companyRequests).values({
+    companyId: data.companyId,
     companyName: data.companyName,
     industry: data.industry,
     website: data.website,
@@ -113,6 +118,7 @@ export async function createCompanyRequest(data: CreateCompanyRequestData, reque
   return {
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,
@@ -151,6 +157,7 @@ export async function approveCompanyRequest(id: string, reviewedBy: string): Pro
   return {
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,
@@ -189,6 +196,7 @@ export async function rejectCompanyRequest(id: string, reviewedBy: string): Prom
   return {
     id: request.id,
     requestedBy: request.requestedBy,
+    companyId: request.companyId || undefined,
     companyName: request.companyName,
     email: request.email || undefined,
     phone: request.phone || undefined,

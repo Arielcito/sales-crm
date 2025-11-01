@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { BrandingProvider } from "@/providers/branding-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "SalPip",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <QueryProvider>
           <BrandingProvider>{children}</BrandingProvider>
         </QueryProvider>
+        <Toaster />
       </body>
     </html>
   );

@@ -136,6 +136,7 @@ export interface TeamStats {
 export interface CompanyRequest {
   id: string
   requestedBy: string
+  companyId?: string | null
   companyName: string
   email?: string | null
   phone?: string | null

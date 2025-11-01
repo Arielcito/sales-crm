@@ -27,10 +27,11 @@ interface KanbanBoardProps {
   stages: DealStage[]
   companies: Array<{ id: string; name: string }>
   contacts: Array<{ id: string; name: string }>
-  users: Array<{ id: string; name: string }>
+  users: User[]
+  teams: Array<{ id: string; name: string }>
 }
 
-export function KanbanBoard({ currentUser, stages, companies, contacts, users }: KanbanBoardProps) {
+export function KanbanBoard({ currentUser, stages, companies, contacts, users, teams }: KanbanBoardProps) {
   const { dateRange, setDateRange, currency, setCurrency, selectedTeamLeaderId, setSelectedTeamLeaderId } = useDashboardFilters()
   const { data: deals = [], isLoading } = useDeals(undefined, selectedTeamLeaderId === "all" ? undefined : selectedTeamLeaderId)
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
@@ -89,6 +90,11 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
 
   const getUser = (userId: string) => {
     return users.find((user) => user.id === userId)
+  }
+
+  const getUserTeamName = (user: User) => {
+    if (!user?.teamId) return undefined
+    return teams.find(t => t.id === user.teamId)?.name
   }
 
   const getCompanyName = (companyId?: string | null) => {
@@ -296,6 +302,8 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users }:
                             isOptimistic={isOptimistic}
                             isDealUpdating={isDealUpdating}
                             responsibleUserName={responsibleUser?.name}
+                            responsibleUserLevel={responsibleUser?.level}
+                            responsibleUserTeamName={responsibleUser ? getUserTeamName(responsibleUser) : undefined}
                             companyName={getCompanyName(deal.companyId)}
                             contactName={getContactName(deal.contactId)}
                             onDragStart={handleDragStart}

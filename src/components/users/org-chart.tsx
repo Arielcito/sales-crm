@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { buildOrgChartTree, canReassignUser, type OrgChartNode } from "@/lib/services/orgchart.service"
+import { buildOrgChartTree, type OrgChartNode } from "@/lib/services/orgchart.service"
 import { OrgChartNodeComponent } from "./org-chart-node"
 import { UserDetailModal } from "./user-detail-modal"
 import { TeamFormModal } from "@/components/teams/team-form-modal"
-import { useReassignUser } from "@/hooks/use-users"
-import { toast } from "sonner"
 import type { User, Team } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -33,10 +31,6 @@ export function OrgChart({
   const [selectedNode, setSelectedNode] = useState<OrgChartNode | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [teamFilter, setTeamFilter] = useState<string>("all")
-  const [draggedUser, setDraggedUser] = useState<User | null>(null)
-  const [dropTarget, setDropTarget] = useState<User | null>(null)
-
-  const reassignUser = useReassignUser()
 
   const tree = useMemo(() => buildOrgChartTree(users, teams), [users, teams])
 
@@ -63,70 +57,7 @@ export function OrgChart({
     setSelectedNode(node)
   }
 
-  const handleDragStart = (user: User) => {
-    setDraggedUser(user)
-  }
-
-  const handleDragOver = (e: React.DragEvent, targetUser: User) => {
-    e.preventDefault()
-
-    if (!draggedUser || draggedUser.id === targetUser.id) return
-
-    const validation = canReassignUser(draggedUser, targetUser, currentUser)
-    if (validation.valid) {
-      setDropTarget(targetUser)
-    }
-  }
-
-  const handleDragLeave = () => {
-    setDropTarget(null)
-  }
-
-  const handleDrop = (e: React.DragEvent, targetUser: User) => {
-    e.preventDefault()
-
-    if (!draggedUser || draggedUser.id === targetUser.id) {
-      setDraggedUser(null)
-      setDropTarget(null)
-      return
-    }
-
-    const validation = canReassignUser(draggedUser, targetUser, currentUser)
-
-    if (!validation.valid) {
-      toast.error(validation.error || "No se puede reasignar este usuario")
-      setDraggedUser(null)
-      setDropTarget(null)
-      return
-    }
-
-    reassignUser.mutate(
-      {
-        id: draggedUser.id,
-        managerId: targetUser.id,
-        teamId: targetUser.teamId,
-      },
-      {
-        onSuccess: () => {
-          toast.success(`${draggedUser.name} reasignado a ${targetUser.name}`)
-          setDraggedUser(null)
-          setDropTarget(null)
-        },
-        onError: () => {
-          setDraggedUser(null)
-          setDropTarget(null)
-        },
-      }
-    )
-  }
-
   const renderUserCard = (user: User) => {
-    const isDragging = draggedUser?.id === user.id
-    const isOver = dropTarget?.id === user.id
-    const canDrop = draggedUser
-      ? canReassignUser(draggedUser, user, currentUser).valid
-      : false
-
     const node: OrgChartNode = {
       user,
       children: [],
@@ -135,21 +66,10 @@ export function OrgChart({
     }
 
     return (
-      <div
-        key={user.id}
-        draggable={user.level > 1}
-        onDragStart={() => handleDragStart(user)}
-        onDragOver={(e) => handleDragOver(e, user)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, user)}
-        className="relative"
-      >
+      <div key={user.id} className="relative">
         <OrgChartNodeComponent
           node={node}
           onNodeClick={handleNodeClick}
-          isDragging={isDragging}
-          isOver={isOver}
-          canDrop={canDrop}
         />
 
         {user.level === 2 && currentUser.level <= 2 && (
@@ -173,41 +93,46 @@ export function OrgChart({
   const level2Groups = useMemo(() => {
     const groups: Array<{
       level2User: User
-      level3Users: User[]
-      level4Users: User[]
+      level3UsersWithSubordinates: Array<{
+        level3User: User
+        level4Subordinates: User[]
+      }>
       team: Team | null
     }> = []
 
     filteredTree.forEach(rootNode => {
       const collectLevel2 = (node: OrgChartNode) => {
         if (node.user.level === 2) {
-          const level3Users: User[] = []
-          const level4Users: User[] = []
+          const level3UsersWithSubordinates: Array<{
+            level3User: User
+            level4Subordinates: User[]
+          }> = []
 
           node.children.forEach(child => {
             console.log("[OrgChart] Processing child:", child.user.name, "level:", child.user.level, "children:", child.children.length)
 
             if (child.user.level === 3) {
-              level3Users.push(child.user)
+              const level4Subordinates: User[] = []
 
               child.children.forEach(grandchild => {
                 console.log("[OrgChart] Processing grandchild:", grandchild.user.name, "level:", grandchild.user.level)
                 if (grandchild.user.level === 4) {
-                  level4Users.push(grandchild.user)
+                  level4Subordinates.push(grandchild.user)
                 }
               })
-            } else if (child.user.level === 4) {
-              console.log("[OrgChart] Found direct level 4 under level 2:", child.user.name)
-              level4Users.push(child.user)
+
+              level3UsersWithSubordinates.push({
+                level3User: child.user,
+                level4Subordinates
+              })
             }
           })
 
-          console.log("[OrgChart] Summary for", node.user.name, "- Level 3:", level3Users.length, "Level 4:", level4Users.length)
+          console.log("[OrgChart] Summary for", node.user.name, "- Level 3:", level3UsersWithSubordinates.length)
 
           groups.push({
             level2User: node.user,
-            level3Users,
-            level4Users,
+            level3UsersWithSubordinates,
             team: node.user.teamId ? teams.find(t => t.id === node.user.teamId) || null : null,
           })
         }
@@ -264,7 +189,23 @@ export function OrgChart({
       {filteredTree.length === 0 ? (
         <Card className="p-12 text-center">
           <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">No hay usuarios para mostrar</p>
+          <p className="text-muted-foreground mb-6">No hay usuarios para mostrar</p>
+          {currentUser.level === 1 && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => onCreateUser?.()} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Líder de Equipo (Nivel 2)
+              </Button>
+              <Button onClick={() => onCreateUser?.()} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Supervisor (Nivel 3)
+              </Button>
+              <Button onClick={() => onCreateUser?.()} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Empleado (Nivel 4)
+              </Button>
+            </div>
+          )}
         </Card>
       ) : (
         <div className="space-y-8">
@@ -290,24 +231,23 @@ export function OrgChart({
                   {renderUserCard(group.level2User)}
                 </div>
 
-                {group.level3Users.length > 0 && (
-                  <div className="space-y-3">
+                {group.level3UsersWithSubordinates.length > 0 && (
+                  <div className="space-y-4">
                     <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Supervisores
+                      Supervisores y Equipo
                     </div>
-                    {group.level3Users.map(user => (
-                      <div key={user.id}>{renderUserCard(user)}</div>
-                    ))}
-                  </div>
-                )}
+                    {group.level3UsersWithSubordinates.map(level3Group => (
+                      <div key={level3Group.level3User.id} className="space-y-3">
+                        {renderUserCard(level3Group.level3User)}
 
-                {group.level4Users.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Empleados
-                    </div>
-                    {group.level4Users.map(user => (
-                      <div key={user.id}>{renderUserCard(user)}</div>
+                        {level3Group.level4Subordinates.length > 0 && (
+                          <div className="ml-6 space-y-2 border-l-2 border-border pl-4">
+                            {level3Group.level4Subordinates.map(level4User => (
+                              <div key={level4User.id}>{renderUserCard(level4User)}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}

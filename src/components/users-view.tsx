@@ -17,7 +17,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserFormModal } from "@/components/user-form-modal"
 import { createUsersColumns } from "@/components/users-table-columns"
-import { useDeleteUser, useUsers } from "@/hooks/use-users"
+import { useDeleteUser, useVisibleUsers } from "@/hooks/use-users"
 import { useTeams } from "@/hooks/use-teams"
 import { OrgChart } from "@/components/users/org-chart"
 import { NewTeamModal } from "@/components/new-team-modal"
@@ -28,7 +28,7 @@ interface UsersViewProps {
 }
 
 export function UsersView({ currentUser }: UsersViewProps) {
-  const { data: users = [], isLoading } = useUsers()
+  const { data: users = [], isLoading } = useVisibleUsers(currentUser)
   const { data: teams = [] } = useTeams()
   const deleteUserMutation = useDeleteUser()
 
