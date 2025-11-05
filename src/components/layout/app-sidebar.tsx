@@ -43,7 +43,6 @@ export function AppSidebar() {
     { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
     { id: "kanban", label: "Pipeline de Ventas", icon: Kanban },
     { id: "companies", label: "Empresas y Contactos", icon: Building2 },
-    { id: "users", label: "Gestión de Usuarios", icon: Users, levelRequired: 1 },
     {
       id: "teams",
       label: currentUser?.level === 3 ? "Mi Equipo" : "Gestión de Equipos",

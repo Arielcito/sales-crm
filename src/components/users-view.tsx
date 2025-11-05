@@ -25,11 +25,16 @@ import type { User } from "@/lib/types"
 
 interface UsersViewProps {
   currentUser: User
+  pageTitle?: string
+  pageDescription?: string
 }
 
-export function UsersView({ currentUser }: UsersViewProps) {
+export function UsersView({ currentUser, pageTitle, pageDescription }: UsersViewProps) {
   const { data: users = [], isLoading } = useVisibleUsers(currentUser)
   const { data: teams = [] } = useTeams()
+
+  const title = pageTitle || "Gestión de Usuarios"
+  const description = pageDescription || `Administra los usuarios del sistema (nivel ${currentUser.level})`
   const deleteUserMutation = useDeleteUser()
 
   const [showFormModal, setShowFormModal] = useState(false)
@@ -83,7 +88,7 @@ export function UsersView({ currentUser }: UsersViewProps) {
       <div className="p-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
+            <h1 className="text-3xl font-bold text-foreground">{title}</h1>
             <p className="text-muted-foreground mt-1">Cargando...</p>
           </div>
         </div>
@@ -95,9 +100,9 @@ export function UsersView({ currentUser }: UsersViewProps) {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Gestión de Usuarios</h1>
+          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
           <p className="text-muted-foreground mt-1">
-            Administra los usuarios del sistema (nivel {currentUser.level})
+            {description}
           </p>
         </div>
         <Button onClick={() => setShowFormModal(true)} className="gap-2">
