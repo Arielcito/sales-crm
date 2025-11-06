@@ -89,12 +89,6 @@ export default function SignInPage() {
               )}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground border-t border-border pt-4">
-            ¿No tienes una cuenta?{" "}
-            <Link href="/auth/signup" className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium">
-              Regístrate
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>
