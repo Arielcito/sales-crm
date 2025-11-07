@@ -26,6 +26,9 @@ export default function SignInPage() {
         password,
       });
       toast.success("Sesión iniciada correctamente");
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       router.push("/dashboard");
     } catch (err) {
       toast.error("Correo electrónico o contraseña inválidos");

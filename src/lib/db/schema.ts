@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, boolean, integer, decimal, date, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, varchar, boolean, integer, decimal, date, foreignKey, index, jsonb } from "drizzle-orm/pg-core";
 
 // Teams table (referenced by users)
 export const teams = pgTable("team", {
@@ -76,7 +76,7 @@ export const verifications = pgTable("verification", {
 export const companies = pgTable("company", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  email: text("email"),
+  email: text("email").unique(),
   phone: varchar("phone", { length: 50 }),
   website: text("website"),
   address: text("address"),
@@ -90,7 +90,9 @@ export const companies = pgTable("company", {
   isGlobal: boolean("isGlobal").notNull().default(false),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
+}, (table) => ({
+  nameIdx: index("company_name_idx").on(table.name),
+}));
 
 export const contacts = pgTable("contact", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -99,14 +101,17 @@ export const contacts = pgTable("contact", {
     .references(() => users.id, { onDelete: "cascade" }),
   companyId: uuid("companyId").references(() => companies.id, { onDelete: "set null" }),
   name: text("name").notNull(),
-  email: text("email"),
+  email: text("email").unique(),
   phone: varchar("phone", { length: 50 }),
   position: text("position"),
   status: varchar("status", { length: 50 }).notNull().default("lead"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
-});
+}, (table) => ({
+  nameCompanyIdx: index("contact_name_company_idx").on(table.name, table.companyId),
+  emailIdx: index("contact_email_idx").on(table.email),
+}));
 
 export const dealStages = pgTable("dealStage", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -186,6 +191,10 @@ export const companyRequests = pgTable("companyRequest", {
   industry: varchar("industry", { length: 100 }),
   notes: text("notes"),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
+  requestType: varchar("requestType", { length: 50 }).notNull().default("manual"),
+  entityType: varchar("entityType", { length: 20 }).notNull().default("company"),
+  potentialDuplicateId: uuid("potentialDuplicateId"),
+  submittedData: jsonb("submittedData"),
   reviewedBy: uuid("reviewedBy").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewedAt"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),

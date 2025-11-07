@@ -144,11 +144,18 @@ export interface CompanyRequest {
   industry?: string | null
   notes?: string | null
   status: string
+  requestType: string
+  entityType: string
+  potentialDuplicateId?: string | null
+  submittedData?: Record<string, unknown> | null
   reviewedBy?: string | null
   reviewedAt?: Date | null
   createdAt: Date
   updatedAt: Date
 }
+
+export type RequestType = "manual" | "fuzzy_match"
+export type EntityType = "company" | "contact"
 
 export interface DashboardStatsExtended {
   openNegotiations: {

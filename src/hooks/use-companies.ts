@@ -36,8 +36,9 @@ export function useCreateCompany() {
         body: JSON.stringify(data),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["companies"] })
+      await queryClient.refetchQueries({ queryKey: ["companies"] })
     },
   })
 }

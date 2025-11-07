@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAllContacts, createContact } from "@/lib/services/contact.service"
+import { getAllContacts, createContact, blindCreateContact } from "@/lib/services/contact.service"
 import { createContactSchema } from "@/lib/schemas/contact"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -43,13 +43,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createContactSchema.parse(body)
 
-    console.log("[API /contacts] Creating contact:", validatedData.name)
+    console.log("[API /contacts] Blind creating contact:", validatedData.name)
 
-    const contact = await createContact(validatedData, session.user.id)
+    const result = await blindCreateContact(validatedData, session.user.id)
 
-    console.log("[API /contacts] Contact created:", contact.id)
+    console.log("[API /contacts] Blind creation result:", result.status)
 
-    return NextResponse.json({ success: true, data: contact }, { status: 201 })
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...result,
+        contact: result.contact
+      }
+    }, { status: 201 })
   } catch (error: unknown) {
     console.error("[API /contacts] Error:", error)
 

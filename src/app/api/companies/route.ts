@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAllCompanies, getCompaniesByUser, createCompany } from "@/lib/services/company.service"
+import { getAllCompanies, getCompaniesByUser, createCompany, blindCreateCompany } from "@/lib/services/company.service"
 import { getUserById } from "@/lib/services/user.service"
 import { createCompanySchema } from "@/lib/schemas/company"
 import { auth } from "@/lib/auth"
@@ -61,34 +61,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const currentUser = await getUserById(session.user.id)
-
-    if (!currentUser) {
-      console.log("[API /companies] Current user not found")
-      return NextResponse.json(
-        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
-        { status: 404 }
-      )
-    }
-
-    if (currentUser.level !== 1) {
-      console.log("[API /companies] User not authorized to create companies")
-      return NextResponse.json(
-        { success: false, error: { code: "FORBIDDEN", message: "Solo nivel 1 puede crear empresas" } },
-        { status: 403 }
-      )
-    }
-
     const body = await request.json()
     const validatedData = createCompanySchema.parse(body)
 
-    console.log("[API /companies] Creating company:", validatedData.name)
+    console.log("[API /companies] Blind creating company:", validatedData.name)
 
-    const company = await createCompany(validatedData, session.user.id)
+    const result = await blindCreateCompany(validatedData, session.user.id)
 
-    console.log("[API /companies] Company created:", company.id)
+    console.log("[API /companies] Blind creation result:", result.status)
 
-    return NextResponse.json({ success: true, data: company }, { status: 201 })
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...result,
+        company: result.company
+      }
+    }, { status: 201 })
   } catch (error: unknown) {
     console.error("[API /companies] Error:", error)
 

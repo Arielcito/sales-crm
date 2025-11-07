@@ -27,8 +27,9 @@ export function useCreateDeal() {
 
   return useMutation({
     mutationFn: (data: CreateDealInput) => createDeal(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deals"] })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["deals"] })
+      await queryClient.refetchQueries({ queryKey: ["deals"] })
     },
   })
 }

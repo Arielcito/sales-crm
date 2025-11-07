@@ -6,6 +6,7 @@ import { DashboardFilters } from "@/components/dashboard-filters"
 import { PipelineTable } from "@/components/pipeline-table"
 import { TeamPieCharts } from "@/components/team-pie-charts"
 import { PendingRequestsCard } from "@/components/pending-requests-card"
+import { FuzzyMatchCard } from "@/components/fuzzy-match-card"
 import { TrendingUp, Briefcase, CheckCircle2, XCircle } from "lucide-react"
 import { useDashboardStats } from "@/hooks/use-dashboard-data"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
@@ -111,7 +112,10 @@ export function Dashboard({ currentUser }: DashboardProps) {
       </div>
 
       {currentUser.level === 1 && (
-        <PendingRequestsCard currentUser={currentUser} />
+        <>
+          <FuzzyMatchCard />
+          <PendingRequestsCard currentUser={currentUser} />
+        </>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

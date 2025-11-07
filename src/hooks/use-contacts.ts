@@ -35,8 +35,9 @@ export function useCreateContact() {
         body: JSON.stringify(data),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["contacts"] })
+      await queryClient.refetchQueries({ queryKey: ["contacts"] })
     },
   })
 }
