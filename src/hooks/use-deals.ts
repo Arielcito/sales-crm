@@ -91,8 +91,36 @@ export function useDeleteDeal() {
 
   return useMutation({
     mutationFn: (id: string) => deleteDeal(id),
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      console.log("[useDeleteDeal] Optimistically removing deal:", id)
+      await queryClient.cancelQueries({ queryKey: ["deals"] })
+
+      const previousDeals = queryClient.getQueryData<Deal[]>(["deals"])
+
+      if (previousDeals) {
+        queryClient.setQueryData<Deal[]>(["deals"], (old = []) =>
+          old.filter((deal) => deal.id !== id)
+        )
+      }
+
+      return { previousDeals }
+    },
+    onError: (err, id, context) => {
+      console.error("[useDeleteDeal] Error deleting deal:", err)
+      toast.error("Error al eliminar negociación", {
+        description: "No se pudo eliminar la negociación. Por favor, intenta nuevamente."
+      })
+      if (context?.previousDeals) {
+        queryClient.setQueryData(["deals"], context.previousDeals)
+      }
+    },
+    onSuccess: (_, id) => {
+      console.log("[useDeleteDeal] Deal deleted successfully:", id)
       queryClient.invalidateQueries({ queryKey: ["deals"] })
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
+      toast.success("Negociación eliminada", {
+        description: "La negociación se eliminó exitosamente."
+      })
     },
   })
 }

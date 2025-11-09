@@ -17,6 +17,7 @@ interface KanbanDealCardProps {
   responsibleUserTeamName?: string
   companyName: string
   contactName: string
+  contactStatus?: string
   onDragStart: (e: React.DragEvent, deal: Deal) => void
   onClick: () => void
 }
@@ -32,13 +33,33 @@ export function KanbanDealCard({
   responsibleUserTeamName,
   companyName,
   contactName,
+  contactStatus,
   onDragStart,
   onClick,
 }: KanbanDealCardProps) {
   const isOverdue = deal.expectedCloseDate && new Date(deal.expectedCloseDate) < new Date()
-  const amount = deal.currency === "USD"
-    ? (deal.amountUsd || 0)
-    : (deal.amountArs || 0)
+
+  const getConvertedAmount = (): number => {
+    if (currency === deal.currency) {
+      return deal.currency === "USD" ? (deal.amountUsd || 0) : (deal.amountArs || 0)
+    }
+
+    if (!deal.dollarRate) {
+      return deal.currency === "USD" ? (deal.amountUsd || 0) : (deal.amountArs || 0)
+    }
+
+    if (currency === "USD" && deal.currency === "ARS") {
+      return (deal.amountArs || 0) / deal.dollarRate
+    }
+
+    if (currency === "ARS" && deal.currency === "USD") {
+      return (deal.amountUsd || 0) * deal.dollarRate
+    }
+
+    return 0
+  }
+
+  const amount = getConvertedAmount()
 
   return (
     <Card
@@ -73,21 +94,27 @@ export function KanbanDealCard({
             <span className="font-bold text-lg text-primary">
               {new Intl.NumberFormat("en-US", {
                 style: "currency",
-                currency: deal.currency,
+                currency: currency,
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
               }).format(amount)}
             </span>
             {deal.currency !== currency && (
               <Badge variant="outline" className="text-xs border-primary/20 text-primary">
-                {deal.currency}
+                Original: {deal.currency}
               </Badge>
             )}
           </div>
 
           <div className="text-xs text-muted-foreground space-y-1">
             <div className="font-medium text-foreground">{companyName}</div>
-            <div>{contactName}</div>
+            {contactStatus === "pending_validation" ? (
+              <Badge variant="outline" className="text-xs border-yellow-500/50 text-yellow-600 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-400">
+                ⚠️ Contacto en revisión
+              </Badge>
+            ) : (
+              <div>{contactName}</div>
+            )}
           </div>
 
           {deal.dollarRate && (

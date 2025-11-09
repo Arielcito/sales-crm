@@ -15,7 +15,7 @@ import { EditStageModal } from "./edit-stage-modal"
 import { CreateStageModal } from "./create-stage-modal"
 import { StatCard } from "./stat-card"
 import { KanbanDealCard } from "./kanban-deal-card"
-import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
+import { useDeals, useUpdateDeal, useDeleteDeal } from "@/hooks/use-deals"
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters"
 import { useToggleStageActive } from "@/hooks/use-deal-stages"
 import { useDashboardStats } from "@/hooks/use-dashboard-data"
@@ -26,7 +26,7 @@ interface KanbanBoardProps {
   currentUser: User
   stages: DealStage[]
   companies: Array<{ id: string; name: string }>
-  contacts: Array<{ id: string; name: string }>
+  contacts: Array<{ id: string; name: string; status: string }>
   users: User[]
   teams: Array<{ id: string; name: string }>
 }
@@ -35,6 +35,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
   const { dateRange, setDateRange, currency, setCurrency, selectedTeamLeaderId, setSelectedTeamLeaderId } = useDashboardFilters()
   const { data: deals = [], isLoading } = useDeals(undefined, selectedTeamLeaderId === "all" ? undefined : selectedTeamLeaderId)
   const { mutate: updateDeal, isPending: isUpdating } = useUpdateDeal()
+  const { mutate: deleteDeal } = useDeleteDeal()
   const { mutate: toggleStageActive } = useToggleStageActive()
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats({ dateRange, currency })
   const { data: teamLeaders = [] } = useTeamLeaders()
@@ -107,6 +108,11 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
     return contacts.find(c => c.id === contactId)?.name || "Contacto Desconocido"
   }
 
+  const getContactStatus = (contactId?: string | null) => {
+    if (!contactId) return undefined
+    return contacts.find(c => c.id === contactId)?.status
+  }
+
   const handleEditStage = (stage: DealStage) => {
     console.log("[KanbanBoard] Editing stage:", stage.id)
     setEditingStage(stage)
@@ -140,6 +146,11 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
         },
       }
     )
+  }
+
+  const handleDeleteDeal = (dealId: string) => {
+    console.log("[KanbanBoard] Deleting deal:", dealId)
+    deleteDeal(dealId)
   }
 
   const orderedStages = [...stages].filter(s => s.isActive).sort((a, b) => a.order - b.order)
@@ -229,9 +240,20 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
             {orderedStages.map((stage) => {
               const stageDeals = deals.filter((deal) => deal.stageId === stage.id)
               const stageTotal = stageDeals.reduce((sum, deal) => {
-                const amount = deal.currency === "USD"
-                  ? (deal.amountUsd || 0)
-                  : (deal.amountArs || 0)
+                let amount = 0
+
+                if (currency === deal.currency) {
+                  amount = deal.currency === "USD" ? (deal.amountUsd || 0) : (deal.amountArs || 0)
+                } else if (deal.dollarRate) {
+                  if (currency === "USD" && deal.currency === "ARS") {
+                    amount = (deal.amountArs || 0) / deal.dollarRate
+                  } else if (currency === "ARS" && deal.currency === "USD") {
+                    amount = (deal.amountUsd || 0) * deal.dollarRate
+                  }
+                } else {
+                  amount = deal.currency === "USD" ? (deal.amountUsd || 0) : (deal.amountArs || 0)
+                }
+
                 return sum + amount
               }, 0)
 
@@ -306,6 +328,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
                             responsibleUserTeamName={responsibleUser ? getUserTeamName(responsibleUser) : undefined}
                             companyName={getCompanyName(deal.companyId)}
                             contactName={getContactName(deal.contactId)}
+                            contactStatus={getContactStatus(deal.contactId)}
                             onDragStart={handleDragStart}
                             onClick={() => !isBeingDragged && setSelectedDeal(deal)}
                           />
@@ -327,6 +350,7 @@ export function KanbanBoard({ currentUser, stages, companies, contacts, users, t
           currency={currency}
           onClose={() => setSelectedDeal(null)}
           onUpdate={() => {}}
+          onDelete={() => handleDeleteDeal(selectedDeal.id)}
         />
       )}
 

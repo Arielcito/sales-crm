@@ -50,6 +50,13 @@
       "when": 1760757429943,
       "tag": "0006_ambitious_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1762704826313,
+      "tag": "0007_fast_marvel_boy",
+      "breakpoints": true
     }
   ]
 }

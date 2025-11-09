@@ -152,23 +152,13 @@ export async function getAllCompanies(): Promise<Company[]> {
 }
 
 export async function getCompaniesByUser(currentUser: User): Promise<Company[]> {
-  console.log("[company.service] Fetching companies for user level:", currentUser.level, "teamId:", currentUser.teamId)
+  console.log("[company.service] Fetching all companies for user:", currentUser.id)
 
   const allCompanies = await getAllCompanies()
 
-  if (currentUser.level === 1) {
-    console.log("[company.service] Level 1 user, returning all companies")
-    return allCompanies
-  }
+  console.log("[company.service] Returning all companies:", allCompanies.length)
 
-  const visibleCompanies = allCompanies.filter(company =>
-    company.isGlobal ||
-    (currentUser.teamId && company.assignedTeamId === currentUser.teamId)
-  )
-
-  console.log("[company.service] Visible companies:", visibleCompanies.length)
-
-  return visibleCompanies
+  return allCompanies
 }
 
 export async function getCompanyById(id: string): Promise<Company | null> {

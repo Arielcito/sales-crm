@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
-import { contacts, companyRequests } from "@/lib/db/schema"
+import { contacts, companyRequests, companies } from "@/lib/db/schema"
 import { eq, desc, and, or, sql } from "drizzle-orm"
-import type { Contact } from "@/lib/types"
+import type { Contact, User } from "@/lib/types"
 
 function levenshteinDistance(str1: string, str2: string): number {
   const m = str1.length
@@ -91,6 +91,13 @@ export async function blindCreateContact(
       if (isFuzzyMatch(data.name, potential.name)) {
         console.log("[contact.service] Fuzzy match found:", potential.id)
 
+        const temporalContact = await createContact({
+          ...data,
+          status: "pending_validation",
+        }, userId)
+
+        console.log("[contact.service] Temporal contact created:", temporalContact.id)
+
         const requestResult = await db.insert(companyRequests).values({
           requestedBy: userId,
           companyName: data.name,
@@ -101,7 +108,7 @@ export async function blindCreateContact(
           requestType: "fuzzy_match",
           entityType: "contact",
           potentialDuplicateId: potential.id,
-          submittedData: JSON.parse(JSON.stringify(data)),
+          submittedData: JSON.parse(JSON.stringify({ ...data, temporalContactId: temporalContact.id })),
         }).returning()
 
         console.log("[contact.service] Fuzzy match request created:", requestResult[0].id)
@@ -109,7 +116,9 @@ export async function blindCreateContact(
         return {
           status: "pending",
           requestId: requestResult[0].id,
-          message: "Se encontró un contacto similar. Pendiente de revisión del administrador."
+          contactId: temporalContact.id,
+          contact: temporalContact,
+          message: "Contacto creado temporalmente. Se encontró un contacto similar que será revisado por el administrador."
         }
       }
     }
@@ -146,6 +155,54 @@ export async function getAllContacts(): Promise<Contact[]> {
     createdAt: contact.createdAt,
     updatedAt: contact.updatedAt,
   }))
+}
+
+export async function getContactsByUser(currentUser: User): Promise<Contact[]> {
+  console.log("[contact.service] Fetching contacts for user level:", currentUser.level, "teamId:", currentUser.teamId)
+
+  if (currentUser.level === 1) {
+    console.log("[contact.service] Level 1 user, returning all contacts")
+    return getAllContacts()
+  }
+
+  const result = await db
+    .select({
+      contact: contacts,
+      company: companies,
+    })
+    .from(contacts)
+    .leftJoin(companies, eq(contacts.companyId, companies.id))
+    .orderBy(desc(contacts.createdAt))
+
+  const visibleContacts = result
+    .filter(row => {
+      if (!row.company) {
+        console.log("[contact.service] Contact without company, including:", row.contact.id)
+        return true
+      }
+
+      const isVisible = row.company.isGlobal ||
+        (currentUser.teamId && row.company.assignedTeamId === currentUser.teamId)
+
+      return isVisible
+    })
+    .map(row => ({
+      id: row.contact.id,
+      userId: row.contact.userId,
+      companyId: row.contact.companyId || undefined,
+      name: row.contact.name,
+      email: row.contact.email || undefined,
+      phone: row.contact.phone || undefined,
+      position: row.contact.position || undefined,
+      status: row.contact.status,
+      notes: row.contact.notes || undefined,
+      createdAt: row.contact.createdAt,
+      updatedAt: row.contact.updatedAt,
+    }))
+
+  console.log("[contact.service] Visible contacts:", visibleContacts.length)
+
+  return visibleContacts
 }
 
 export async function getContactById(id: string): Promise<Contact | null> {

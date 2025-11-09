@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAllContacts, createContact, blindCreateContact } from "@/lib/services/contact.service"
+import { getAllContacts, createContact, blindCreateContact, getContactsByUser } from "@/lib/services/contact.service"
+import { getUserById } from "@/lib/services/user.service"
 import { createContactSchema } from "@/lib/schemas/contact"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
@@ -9,9 +10,29 @@ export async function GET() {
   try {
     console.log("[API /contacts] GET request received")
 
-    const contacts = await getAllContacts()
+    const session = await auth.api.getSession({ headers: await headers() })
 
-    console.log("[API /contacts] Returning contacts:", contacts.length)
+    if (!session?.user) {
+      console.log("[API /contacts] No session found")
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
+        { status: 401 }
+      )
+    }
+
+    const currentUser = await getUserById(session.user.id)
+
+    if (!currentUser) {
+      console.log("[API /contacts] Current user not found")
+      return NextResponse.json(
+        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
+        { status: 404 }
+      )
+    }
+
+    const contacts = await getContactsByUser(currentUser)
+
+    console.log("[API /contacts] Returning filtered contacts:", contacts.length)
 
     return NextResponse.json({ success: true, data: contacts })
   } catch (error) {

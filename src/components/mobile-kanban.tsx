@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
-import { useDeals, useUpdateDeal } from "@/hooks/use-deals"
+import { useDeals, useUpdateDeal, useDeleteDeal } from "@/hooks/use-deals"
 import { useCompanies } from "@/hooks/use-companies"
 import { useContacts } from "@/hooks/use-contacts"
 import { useConvertCurrency } from "@/hooks/use-exchange-rate"
@@ -41,6 +41,7 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
   const { data: visibleUsers = [] } = useVisibleUsers(currentUser)
   const { convertAmount } = useConvertCurrency()
   const updateDealMutation = useUpdateDeal()
+  const { mutate: deleteDeal } = useDeleteDeal()
 
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
   const [currency, setCurrency] = useState<Currency>(DEFAULT_CURRENCY)
@@ -124,6 +125,11 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
     const currentIndex = stageIds.indexOf(deal.stageId)
     if (currentIndex === -1) return
     moveToStage(deal, currentIndex - 1)
+  }
+
+  const handleDeleteDeal = (dealId: string) => {
+    console.log("[MobileKanban] Deleting deal:", dealId)
+    deleteDeal(dealId)
   }
 
   if (dealsLoading || stagesLoading || !currentStageValue) {
@@ -307,6 +313,7 @@ export function MobileKanban({ currentUser }: MobileKanbanProps) {
           currency={currency}
           onClose={() => setSelectedDeal(null)}
           onUpdate={() => setSelectedDeal(null)}
+          onDelete={() => handleDeleteDeal(selectedDeal.id)}
         />
       )}
 

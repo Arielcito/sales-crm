@@ -34,20 +34,10 @@ export function PendingRequestsCard({ currentUser }: PendingRequestsCardProps) {
     )
   }
 
-  const pendingRequests = requests.filter(r => r.status === "pending")
+  const pendingRequests = requests.filter(r => r.status === "pending" && r.requestType === "manual")
 
   if (pendingRequests.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Solicitudes Pendientes
-          </CardTitle>
-          <CardDescription>No hay solicitudes pendientes</CardDescription>
-        </CardHeader>
-      </Card>
-    )
+    return null
   }
 
   return (
@@ -55,10 +45,10 @@ export function PendingRequestsCard({ currentUser }: PendingRequestsCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="w-5 h-5" />
-          Solicitudes Pendientes
+          Solicitudes Manuales Pendientes
           <Badge variant="secondary">{pendingRequests.length}</Badge>
         </CardTitle>
-        <CardDescription>Revisa y aprueba solicitudes de empresas</CardDescription>
+        <CardDescription>Solicitudes antiguas de empresas (el sistema ahora usa creación automática)</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

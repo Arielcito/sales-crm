@@ -5,15 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Building2, Plus, Search, Users, Mail, Phone, Briefcase, Globe, Pencil, Trash2 } from "lucide-react"
+import { Building2, Plus, Search, Users, Mail, Phone, Briefcase, Globe, Pencil, Trash2, UserCog } from "lucide-react"
 import { useCompanies, useDeleteCompany } from "@/hooks/use-companies"
 import { useContacts, useDeleteContact } from "@/hooks/use-contacts"
+import { useTeams } from "@/hooks/use-teams"
 import type { User, Company, Contact } from "@/lib/types"
 import { NewCompanyModal } from "@/components/new-company-modal"
 import { NewContactModal } from "@/components/new-contact-modal"
 import { EditCompanyModal } from "@/components/edit-company-modal"
 import { EditContactModal } from "@/components/edit-contact-modal"
-import { CompanySelectionModal } from "@/components/company-selection-modal"
+import { AdminAssignCompanyModal } from "@/components/admin-assign-company-modal"
 import { CompaniesSkeleton } from "@/components/companies-skeleton"
 import {
   AlertDialog,
@@ -33,18 +34,19 @@ interface CompaniesViewProps {
 export function CompaniesView({ currentUser }: CompaniesViewProps) {
   const { data: companies = [], isLoading: companiesLoading } = useCompanies()
   const { data: contacts = [], isLoading: contactsLoading } = useContacts()
+  const { data: teams = [] } = useTeams()
   const deleteCompanyMutation = useDeleteCompany()
   const deleteContactMutation = useDeleteContact()
 
   const [searchTerm, setSearchTerm] = useState("")
   const [showNewCompanyModal, setShowNewCompanyModal] = useState(false)
   const [showNewContactModal, setShowNewContactModal] = useState(false)
-  const [showCompanySelectionModal, setShowCompanySelectionModal] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [editingContact, setEditingContact] = useState<Contact | null>(null)
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null)
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null)
+  const [assigningCompany, setAssigningCompany] = useState<Company | null>(null)
 
   const filteredCompanies = useMemo(() => {
     return companies.filter(
@@ -112,17 +114,10 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
               : "Empresas asignadas a tu equipo"}
           </p>
         </div>
-        {currentUser.level === 1 ? (
-          <Button onClick={() => setShowNewCompanyModal(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nueva Empresa
-          </Button>
-        ) : (
-          <Button onClick={() => setShowCompanySelectionModal(true)} className="gap-2" variant="outline">
-            <Plus className="w-4 h-4" />
-            Solicitar Empresa
-          </Button>
-        )}
+        <Button onClick={() => setShowNewCompanyModal(true)} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Nueva Empresa
+        </Button>
       </div>
 
       <div className="relative">
@@ -165,6 +160,11 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    {currentUser.level === 1 && (
+                      <Button variant="ghost" size="sm" onClick={() => setAssigningCompany(company)} title="Asignar equipo">
+                        <UserCog className="w-4 h-4" />
+                      </Button>
+                    )}
                     <Button variant="ghost" size="sm" onClick={() => setEditingCompany(company)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -262,16 +262,6 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
         <NewCompanyModal onClose={() => setShowNewCompanyModal(false)} onSuccess={handleCompanyCreated} />
       )}
 
-      {showCompanySelectionModal && (
-        <CompanySelectionModal
-          isOpen={showCompanySelectionModal}
-          onClose={() => setShowCompanySelectionModal(false)}
-          onSuccess={() => setShowCompanySelectionModal(false)}
-          companies={companies}
-          contacts={contacts}
-        />
-      )}
-
       {showNewContactModal && selectedCompany && (
         <NewContactModal
           companyId={selectedCompany.id}
@@ -334,6 +324,14 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      )}
+
+      {assigningCompany && (
+        <AdminAssignCompanyModal
+          company={assigningCompany}
+          teams={teams}
+          onClose={() => setAssigningCompany(null)}
+        />
       )}
     </div>
   )

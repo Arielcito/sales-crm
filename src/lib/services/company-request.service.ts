@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { companyRequests } from "@/lib/db/schema"
+import { companyRequests, deals, contacts } from "@/lib/db/schema"
 import { eq, desc, and } from "drizzle-orm"
 import type { CompanyRequest } from "@/lib/types"
 
@@ -152,6 +152,34 @@ export async function createCompanyRequest(data: CreateCompanyRequestData, reque
 export async function approveCompanyRequest(id: string, reviewedBy: string): Promise<CompanyRequest> {
   console.log("[company-request.service] Approving company request:", id)
 
+  const existingRequest = await db.select().from(companyRequests).where(eq(companyRequests.id, id)).limit(1)
+
+  if (existingRequest.length === 0) {
+    throw new Error("Company request not found")
+  }
+
+  const requestData = existingRequest[0]
+
+  if (requestData.entityType === "contact" && requestData.requestType === "fuzzy_match") {
+    console.log("[company-request.service] Processing contact fuzzy match approval")
+
+    const submittedData = requestData.submittedData as Record<string, unknown> | null
+    const temporalContactId = submittedData?.temporalContactId as string | undefined
+    const approvedContactId = requestData.potentialDuplicateId
+
+    if (temporalContactId && approvedContactId) {
+      console.log("[company-request.service] Updating deals from temporal contact:", temporalContactId, "to approved:", approvedContactId)
+
+      await db.update(deals)
+        .set({ contactId: approvedContactId, updatedAt: new Date() })
+        .where(eq(deals.contactId, temporalContactId))
+
+      console.log("[company-request.service] Deleting temporal contact:", temporalContactId)
+
+      await db.delete(contacts).where(eq(contacts.id, temporalContactId))
+    }
+  }
+
   const result = await db.update(companyRequests)
     .set({
       status: "approved",
@@ -194,6 +222,29 @@ export async function approveCompanyRequest(id: string, reviewedBy: string): Pro
 
 export async function rejectCompanyRequest(id: string, reviewedBy: string): Promise<CompanyRequest> {
   console.log("[company-request.service] Rejecting company request:", id)
+
+  const existingRequest = await db.select().from(companyRequests).where(eq(companyRequests.id, id)).limit(1)
+
+  if (existingRequest.length === 0) {
+    throw new Error("Company request not found")
+  }
+
+  const requestData = existingRequest[0]
+
+  if (requestData.entityType === "contact" && requestData.requestType === "fuzzy_match") {
+    console.log("[company-request.service] Processing contact fuzzy match rejection")
+
+    const submittedData = requestData.submittedData as Record<string, unknown> | null
+    const temporalContactId = submittedData?.temporalContactId as string | undefined
+
+    if (temporalContactId) {
+      console.log("[company-request.service] Converting temporal contact to definitive:", temporalContactId)
+
+      await db.update(contacts)
+        .set({ status: "lead", updatedAt: new Date() })
+        .where(eq(contacts.id, temporalContactId))
+    }
+  }
 
   const result = await db.update(companyRequests)
     .set({
