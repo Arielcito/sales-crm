@@ -31,7 +31,7 @@ export function DeleteDealDialog({ open, onOpenChange, onConfirm, dealTitle }: D
         <AlertDialogHeader>
           <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
           <AlertDialogDescription>
-            Estás a punto de eliminar la negociación <span className="font-semibold">"{dealTitle}"</span>.
+            Estás a punto de eliminar la negociación <span className="font-semibold">&quot;{dealTitle}&quot;</span>.
             Esta acción no se puede deshacer y se perderán todos los datos asociados.
           </AlertDialogDescription>
         </AlertDialogHeader>

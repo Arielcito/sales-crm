@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,16 +35,12 @@ export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
   const [previousRates, setPreviousRates] = useState<Map<string, number>>(new Map())
 
-  useEffect(() => {
-    loadExchangeRates()
-  }, [])
-
   const calculateChange = (current: number, previous: number | undefined): number => {
     if (!previous || previous === 0) return 0
     return ((current - previous) / previous) * 100
   }
 
-  const loadExchangeRates = async () => {
+  const loadExchangeRates = useCallback(async () => {
     setIsUpdating(true)
 
     try {
@@ -58,47 +54,53 @@ export function CurrencySettings({ currentUser }: CurrencySettingsProps) {
       const oficial: DolarApiResponse = await oficialRes.json()
       const cripto: DolarApiResponse = await criptoRes.json()
 
-      const newRates: ExchangeRate[] = [
-        {
-          currency: "USD",
-          name: "Dólar Blue",
-          type: "Blue",
-          rate: blue.venta,
-          change: calculateChange(blue.venta, previousRates.get("blue")),
-          lastUpdate: new Date(blue.fechaActualizacion),
-        },
-        {
-          currency: "USD",
-          name: "Dólar Oficial",
-          type: "Oficial",
-          rate: oficial.venta,
-          change: calculateChange(oficial.venta, previousRates.get("oficial")),
-          lastUpdate: new Date(oficial.fechaActualizacion),
-        },
-        {
-          currency: "USD",
-          name: "Dólar Cripto",
-          type: "Cripto",
-          rate: cripto.venta,
-          change: calculateChange(cripto.venta, previousRates.get("cripto")),
-          lastUpdate: new Date(cripto.fechaActualizacion),
-        },
-      ]
+      setPreviousRates(prevRates => {
+        const newRates: ExchangeRate[] = [
+          {
+            currency: "USD",
+            name: "Dólar Blue",
+            type: "Blue",
+            rate: blue.venta,
+            change: calculateChange(blue.venta, prevRates.get("blue")),
+            lastUpdate: new Date(blue.fechaActualizacion),
+          },
+          {
+            currency: "USD",
+            name: "Dólar Oficial",
+            type: "Oficial",
+            rate: oficial.venta,
+            change: calculateChange(oficial.venta, prevRates.get("oficial")),
+            lastUpdate: new Date(oficial.fechaActualizacion),
+          },
+          {
+            currency: "USD",
+            name: "Dólar Cripto",
+            type: "Cripto",
+            rate: cripto.venta,
+            change: calculateChange(cripto.venta, prevRates.get("cripto")),
+            lastUpdate: new Date(cripto.fechaActualizacion),
+          },
+        ]
 
-      setPreviousRates(new Map([
-        ["blue", blue.venta],
-        ["oficial", oficial.venta],
-        ["cripto", cripto.venta],
-      ]))
+        setExchangeRates(newRates)
+        setLastUpdate(new Date())
 
-      setExchangeRates(newRates)
-      setLastUpdate(new Date())
+        return new Map([
+          ["blue", blue.venta],
+          ["oficial", oficial.venta],
+          ["cripto", cripto.venta],
+        ])
+      })
     } catch (error) {
       console.error("[CurrencySettings] Error fetching exchange rates:", error)
     } finally {
       setIsUpdating(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadExchangeRates()
+  }, [loadExchangeRates])
 
   const handleRefresh = async () => {
     await loadExchangeRates()
