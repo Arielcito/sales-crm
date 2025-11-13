@@ -20,19 +20,6 @@ export default function RequestsPage() {
   const { data: companyRequests = [], isLoading: companyRequestsLoading } = useCompanyRequests()
   const { data: contactRequests = [], isLoading: contactRequestsLoading } = useContactRequests()
 
-  if (userLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Cargando...</p>
-      </div>
-    )
-  }
-
-  if (!currentUser || currentUser.level !== 1) {
-    router.push("/dashboard")
-    return null
-  }
-
   const filteredCompanyRequests = useMemo(() => {
     if (selectedStatus === "all") return companyRequests
     return companyRequests.filter((request) => request.status === selectedStatus)
@@ -56,6 +43,19 @@ export default function RequestsPage() {
     approved: contactRequests.filter((r) => r.status === "approved").length,
     rejected: contactRequests.filter((r) => r.status === "rejected").length,
   }), [contactRequests])
+
+  if (userLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Cargando...</p>
+      </div>
+    )
+  }
+
+  if (!currentUser || currentUser.level !== 1) {
+    router.push("/dashboard")
+    return null
+  }
 
   const emptyMessages: Record<string, string> = {
     all: "No hay solicitudes registradas",
