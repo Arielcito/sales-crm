@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Building2, Plus, Search, Users, Mail, Phone, Briefcase, Globe, Pencil, Trash2, UserCog } from "lucide-react"
+import { Building2, Plus, Search, Users, Mail, Phone, Briefcase, Globe, Pencil, Trash2, UserCog, Lock } from "lucide-react"
 import { useCompanies, useDeleteCompany } from "@/hooks/use-companies"
 import { useContacts, useDeleteContact } from "@/hooks/use-contacts"
 import { useTeams } from "@/hooks/use-teams"
@@ -16,6 +16,7 @@ import { EditCompanyModal } from "@/components/edit-company-modal"
 import { EditContactModal } from "@/components/edit-contact-modal"
 import { AdminAssignCompanyModal } from "@/components/admin-assign-company-modal"
 import { CompaniesSkeleton } from "@/components/companies-skeleton"
+import { ContactAccessRequestModal } from "@/components/contact-access-request-modal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null)
   const [deletingContact, setDeletingContact] = useState<Contact | null>(null)
   const [assigningCompany, setAssigningCompany] = useState<Company | null>(null)
+  const [requestingAccessContact, setRequestingAccessContact] = useState<string | null>(null)
 
   const filteredCompanies = useMemo(() => {
     return companies.filter(
@@ -201,44 +203,79 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
                   </p>
                 ) : (
                   <div className="grid gap-3">
-                    {companyContacts.map((contact) => (
-                      <div
-                        key={contact.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
-                          <div>
-                            <p className="font-medium text-sm">{contact.name}</p>
-                            <p className="text-xs text-muted-foreground">{contact.position}</p>
-                          </div>
-                          {contact.status && (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {contact.status}
-                              </Badge>
+                    {companyContacts.map((contact) => {
+                      const hasAccess = contact.email || contact.phone || contact.position
+
+                      return (
+                        <div
+                          key={contact.id}
+                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          {hasAccess ? (
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+                              <div>
+                                <p className="font-medium text-sm">{contact.name}</p>
+                                {contact.position && (
+                                  <p className="text-xs text-muted-foreground">{contact.position}</p>
+                                )}
+                              </div>
+                              {contact.status && (
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {contact.status}
+                                  </Badge>
+                                </div>
+                              )}
+                              {contact.email && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Mail className="w-3 h-3" />
+                                  <span className="truncate">{contact.email}</span>
+                                </div>
+                              )}
+                              {contact.phone && (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{contact.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <p className="font-medium text-sm">{contact.name}</p>
+                                  {contact.status && (
+                                    <Badge variant="outline" className="text-xs mt-1">
+                                      {contact.status}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Datos de contacto restringidos
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setRequestingAccessContact(contact.id)}
+                                className="gap-2"
+                              >
+                                <Lock className="w-3 h-3" />
+                                Solicitar Acceso
+                              </Button>
                             </div>
                           )}
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="w-3 h-3" />
-                            <span className="truncate">{contact.email}</span>
+                          <div className="flex gap-2 ml-4">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingContact(contact)}>
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setDeletingContact(contact)}>
+                              <Trash2 className="w-3 h-3 text-destructive" />
+                            </Button>
                           </div>
-                          {contact.phone && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Phone className="w-3 h-3" />
-                              <span>{contact.phone}</span>
-                            </div>
-                          )}
                         </div>
-                        <div className="flex gap-2 ml-4">
-                          <Button variant="ghost" size="sm" onClick={() => setEditingContact(contact)}>
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDeletingContact(contact)}>
-                            <Trash2 className="w-3 h-3 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -331,6 +368,15 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
           company={assigningCompany}
           teams={teams}
           onClose={() => setAssigningCompany(null)}
+        />
+      )}
+
+      {requestingAccessContact && (
+        <ContactAccessRequestModal
+          isOpen={true}
+          onClose={() => setRequestingAccessContact(null)}
+          contactId={requestingAccessContact}
+          fieldName="datos de contacto"
         />
       )}
     </div>

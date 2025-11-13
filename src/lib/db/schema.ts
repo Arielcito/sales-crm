@@ -113,6 +113,41 @@ export const contacts = pgTable("contact", {
   emailIdx: index("contact_email_idx").on(table.email),
 }));
 
+export const contactPermissions = pgTable("contactPermission", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  contactId: uuid("contactId")
+    .notNull()
+    .references(() => contacts.id, { onDelete: "cascade" }),
+  grantedBy: uuid("grantedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  grantedAt: timestamp("grantedAt").notNull().defaultNow(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+}, (table) => ({
+  userContactIdx: index("contact_permission_user_contact_idx").on(table.userId, table.contactId),
+}));
+
+export const contactAccessRequests = pgTable("contactAccessRequest", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestedBy: uuid("requestedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  contactId: uuid("contactId")
+    .notNull()
+    .references(() => contacts.id, { onDelete: "cascade" }),
+  reason: text("reason"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  reviewedBy: uuid("reviewedBy").references(() => users.id, { onDelete: "set null" }),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+}, (table) => ({
+  statusIdx: index("contact_access_request_status_idx").on(table.status),
+}));
+
 export const dealStages = pgTable("dealStage", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),

@@ -3,19 +3,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { apiClient } from "@/lib/api/client"
-import type { CompanyRequest } from "@/lib/types"
+import type { ContactAccessRequest } from "@/lib/types"
 
 type RequestFilters = {
   status?: string
-  requestType?: string
 }
 
-export function useCompanyRequests(filters?: RequestFilters) {
+export function useContactRequests(filters?: RequestFilters) {
   return useQuery({
-    queryKey: ["company-requests", filters],
+    queryKey: ["contact-requests", filters],
     queryFn: async () => {
-      const response = await apiClient<{ data: CompanyRequest[] }>(
-        "/api/companies/requests"
+      const response = await apiClient<{ data: ContactAccessRequest[] }>(
+        "/api/contact-requests"
       )
       return response.data
     },
@@ -25,20 +24,19 @@ export function useCompanyRequests(filters?: RequestFilters) {
 
       return data.filter((request) => {
         const matchesStatus = !filters.status || request.status === filters.status
-        const matchesType = !filters.requestType || request.requestType === filters.requestType
-        return matchesStatus && matchesType
+        return matchesStatus
       })
     },
   })
 }
 
-export function useApproveCompanyRequest() {
+export function useApproveContactRequest() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient<{ data: CompanyRequest }>(
-        `/api/companies/requests/${id}`,
+      const response = await apiClient<{ data: ContactAccessRequest }>(
+        `/api/contact-requests/${id}`,
         {
           method: "PATCH",
           body: JSON.stringify({ action: "approve" }),
@@ -47,9 +45,10 @@ export function useApproveCompanyRequest() {
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["contact-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
       toast.success("Solicitud aprobada", {
-        description: "La solicitud ha sido aprobada exitosamente"
+        description: "Acceso a contacto concedido exitosamente"
       })
     },
     onError: () => {
@@ -60,13 +59,13 @@ export function useApproveCompanyRequest() {
   })
 }
 
-export function useRejectCompanyRequest() {
+export function useRejectContactRequest() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient<{ data: CompanyRequest }>(
-        `/api/companies/requests/${id}`,
+      const response = await apiClient<{ data: ContactAccessRequest }>(
+        `/api/contact-requests/${id}`,
         {
           method: "PATCH",
           body: JSON.stringify({ action: "reject" }),
@@ -75,9 +74,9 @@ export function useRejectCompanyRequest() {
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-requests"] })
+      queryClient.invalidateQueries({ queryKey: ["contact-requests"] })
       toast.success("Solicitud rechazada", {
-        description: "La solicitud ha sido rechazada"
+        description: "La solicitud de acceso ha sido rechazada"
       })
     },
     onError: () => {
@@ -88,12 +87,12 @@ export function useRejectCompanyRequest() {
   })
 }
 
-export function usePendingRequestsCount() {
+export function usePendingContactRequestsCount() {
   return useQuery({
-    queryKey: ["company-requests"],
+    queryKey: ["contact-requests"],
     queryFn: async () => {
-      const response = await apiClient<{ data: CompanyRequest[] }>(
-        "/api/companies/requests"
+      const response = await apiClient<{ data: ContactAccessRequest[] }>(
+        "/api/contact-requests"
       )
       return response.data
     },

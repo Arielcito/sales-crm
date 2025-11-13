@@ -51,6 +51,27 @@ export interface Contact {
   updatedAt: Date;
 }
 
+export interface ContactPermission {
+  id: string;
+  userId: string;
+  contactId: string;
+  grantedBy: string;
+  grantedAt: Date;
+  createdAt: Date;
+}
+
+export interface ContactAccessRequest {
+  id: string;
+  requestedBy: string;
+  contactId: string;
+  reason?: string;
+  status: string;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface DealStage {
   id: string;
   name: string;
@@ -110,7 +131,7 @@ export interface DealHistory {
   createdAt: Date;
 }
 
-export type ViewType = "dashboard" | "kanban" | "companies" | "users" | "teams" | "currency" | "settings/branding";
+export type ViewType = "dashboard" | "requests" | "kanban" | "companies" | "users" | "teams" | "currency" | "settings/branding";
 
 export interface NavigationItem {
   id: ViewType;

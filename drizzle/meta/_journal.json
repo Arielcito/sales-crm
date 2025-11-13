@@ -57,6 +57,13 @@
       "when": 1762704826313,
       "tag": "0007_fast_marvel_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1763056341665,
+      "tag": "0008_living_tempest",
+      "breakpoints": true
     }
   ]
 }

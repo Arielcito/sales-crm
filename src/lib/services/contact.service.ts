@@ -2,6 +2,7 @@ import { db } from "@/lib/db"
 import { contacts, companyRequests, companies } from "@/lib/db/schema"
 import { eq, desc, and, or, sql } from "drizzle-orm"
 import type { Contact, User } from "@/lib/types"
+import { hasContactPermission, maskSensitiveFields } from "./contact-permission.service"
 
 function levenshteinDistance(str1: string, str2: string): number {
   const m = str1.length
@@ -160,11 +161,6 @@ export async function getAllContacts(): Promise<Contact[]> {
 export async function getContactsByUser(currentUser: User): Promise<Contact[]> {
   console.log("[contact.service] Fetching contacts for user level:", currentUser.level, "teamId:", currentUser.teamId)
 
-  if (currentUser.level === 1) {
-    console.log("[contact.service] Level 1 user, returning all contacts")
-    return getAllContacts()
-  }
-
   const result = await db
     .select({
       contact: contacts,
@@ -174,38 +170,33 @@ export async function getContactsByUser(currentUser: User): Promise<Contact[]> {
     .leftJoin(companies, eq(contacts.companyId, companies.id))
     .orderBy(desc(contacts.createdAt))
 
-  const visibleContacts = result
-    .filter(row => {
-      if (!row.company) {
-        console.log("[contact.service] Contact without company, including:", row.contact.id)
-        return true
-      }
+  const allContactsRaw = result.map(row => ({
+    id: row.contact.id,
+    userId: row.contact.userId,
+    companyId: row.contact.companyId || undefined,
+    name: row.contact.name,
+    email: row.contact.email || undefined,
+    phone: row.contact.phone || undefined,
+    position: row.contact.position || undefined,
+    status: row.contact.status,
+    notes: row.contact.notes || undefined,
+    createdAt: row.contact.createdAt,
+    updatedAt: row.contact.updatedAt,
+  }))
 
-      const isVisible = row.company.isGlobal ||
-        (currentUser.teamId && row.company.assignedTeamId === currentUser.teamId)
-
-      return isVisible
+  const contactsWithPermissions = await Promise.all(
+    allContactsRaw.map(async (contact) => {
+      const hasPermission = await hasContactPermission(currentUser.id, contact.id, currentUser.level)
+      return await maskSensitiveFields(contact, hasPermission)
     })
-    .map(row => ({
-      id: row.contact.id,
-      userId: row.contact.userId,
-      companyId: row.contact.companyId || undefined,
-      name: row.contact.name,
-      email: row.contact.email || undefined,
-      phone: row.contact.phone || undefined,
-      position: row.contact.position || undefined,
-      status: row.contact.status,
-      notes: row.contact.notes || undefined,
-      createdAt: row.contact.createdAt,
-      updatedAt: row.contact.updatedAt,
-    }))
+  )
 
-  console.log("[contact.service] Visible contacts:", visibleContacts.length)
+  console.log("[contact.service] Contacts with permissions applied:", contactsWithPermissions.length)
 
-  return visibleContacts
+  return contactsWithPermissions
 }
 
-export async function getContactById(id: string): Promise<Contact | null> {
+export async function getContactById(id: string, currentUser?: User): Promise<Contact | null> {
   console.log("[contact.service] Fetching contact by id:", id)
 
   const result = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1)
@@ -217,7 +208,7 @@ export async function getContactById(id: string): Promise<Contact | null> {
 
   const contact = result[0]
 
-  return {
+  const contactData = {
     id: contact.id,
     userId: contact.userId,
     companyId: contact.companyId || undefined,
@@ -230,6 +221,13 @@ export async function getContactById(id: string): Promise<Contact | null> {
     createdAt: contact.createdAt,
     updatedAt: contact.updatedAt,
   }
+
+  if (!currentUser) {
+    return contactData
+  }
+
+  const hasPermission = await hasContactPermission(currentUser.id, contact.id, currentUser.level)
+  return await maskSensitiveFields(contactData, hasPermission)
 }
 
 interface CreateContactData {

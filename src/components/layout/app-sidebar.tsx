@@ -26,10 +26,12 @@ import {
   Building2,
   Palette,
   UsersRound,
+  Bell,
 } from "lucide-react"
 import { signOut } from "@/lib/auth-client"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { useBrandingContext } from "@/providers/branding-provider"
+import { usePendingRequestsCount } from "@/hooks/use-company-requests"
 import type { NavigationItem, ViewType } from "@/lib/types"
 
 export function AppSidebar() {
@@ -37,10 +39,12 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { data: currentUser, isLoading } = useCurrentUser()
   const { name: brandName, logoUrl } = useBrandingContext()
+  const { data: pendingCount = 0 } = usePendingRequestsCount()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const navigationItems: NavigationItem[] = [
     { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
+    { id: "requests", label: "Solicitudes", icon: Bell, levelRequired: 1 },
     { id: "kanban", label: "Pipeline de Ventas", icon: Kanban },
     { id: "companies", label: "Empresas y Contactos", icon: Building2 },
     {
@@ -125,6 +129,11 @@ export function AppSidebar() {
                     >
                       <Icon className="w-5 h-5" />
                       <span className="flex-1 text-left text-sm">{item.label}</span>
+                      {item.id === "requests" && pendingCount > 0 && (
+                        <Badge variant="default" className="bg-red-500 text-white">
+                          {pendingCount}
+                        </Badge>
+                      )}
                       {isActive && <ChevronRight className="w-4 h-4 ml-2" />}
                     </SidebarMenuButton>
                   </SidebarMenuItem>

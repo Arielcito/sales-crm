@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { updateContact, deleteContact, getContactById } from "@/lib/services/contact.service"
+import { getUserById } from "@/lib/services/user.service"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 
@@ -12,7 +13,27 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const { id } = await context.params
     console.log("[API /contacts/[id]] GET request for contact:", id)
 
-    const contact = await getContactById(id)
+    const session = await auth.api.getSession({ headers: await headers() })
+
+    if (!session?.user) {
+      console.log("[API /contacts/[id]] No session found")
+      return NextResponse.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "No autorizado" } },
+        { status: 401 }
+      )
+    }
+
+    const currentUser = await getUserById(session.user.id)
+
+    if (!currentUser) {
+      console.log("[API /contacts/[id]] Current user not found")
+      return NextResponse.json(
+        { success: false, error: { code: "USER_NOT_FOUND", message: "Usuario no encontrado" } },
+        { status: 404 }
+      )
+    }
+
+    const contact = await getContactById(id, currentUser)
 
     if (!contact) {
       return NextResponse.json(
