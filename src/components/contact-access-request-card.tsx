@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { UserCircle, Check, X, FileText, User } from "lucide-react"
 import { RequestStatusBadge } from "./request-status-badge"
 import { useApproveContactRequest, useRejectContactRequest } from "@/hooks/use-contact-requests"
-import { useContacts } from "@/hooks/use-contacts"
-import { useUsers } from "@/hooks/use-users"
 import type { ContactAccessRequest } from "@/lib/types"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -20,14 +18,9 @@ interface ContactAccessRequestCardProps {
 export function ContactAccessRequestCard({ request, showActions = true }: ContactAccessRequestCardProps) {
   const approveMutation = useApproveContactRequest()
   const rejectMutation = useRejectContactRequest()
-  const { data: contacts = [] } = useContacts()
-  const { data: users = [] } = useUsers()
 
   const isPending = request.status === "pending"
   const isProcessing = approveMutation.isPending || rejectMutation.isPending
-
-  const contact = contacts.find((c) => c.id === request.contactId)
-  const requestedByUser = users.find((u) => u.id === request.requestedBy)
 
   return (
     <Card className="p-4 hover:shadow-md transition-all duration-200">
@@ -40,10 +33,15 @@ export function ContactAccessRequestCard({ request, showActions = true }: Contac
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-base">
-                Acceso a contacto: {contact?.name || "Desconocido"}
+                Acceso a contacto: {request.contactName || "Desconocido"}
               </h3>
+              {request.companyName && (
+                <p className="text-xs text-muted-foreground">
+                  {request.companyName}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground mt-1">
-                Solicitado por: {requestedByUser?.name || "Usuario desconocido"}
+                Solicitado por: {request.requestedByName || "Usuario desconocido"}
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <RequestStatusBadge status={request.status as "pending" | "approved" | "rejected"} />

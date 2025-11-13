@@ -70,6 +70,9 @@ export interface ContactAccessRequest {
   reviewedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  requestedByName?: string;
+  contactName?: string;
+  companyName?: string;
 }
 
 export interface DealStage {

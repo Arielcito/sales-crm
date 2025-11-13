@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { contactPermissions, contactAccessRequests, contacts, users } from "@/lib/db/schema"
+import { contactPermissions, contactAccessRequests, contacts, users, companies } from "@/lib/db/schema"
 import { eq, and, desc } from "drizzle-orm"
 import type { Contact, User, ContactPermission, ContactAccessRequest } from "@/lib/types"
 
@@ -105,8 +105,24 @@ export async function getContactAccessRequests(): Promise<ContactAccessRequest[]
   console.log("[contact-permission.service] Fetching all contact access requests")
 
   const result = await db
-    .select()
+    .select({
+      id: contactAccessRequests.id,
+      requestedBy: contactAccessRequests.requestedBy,
+      contactId: contactAccessRequests.contactId,
+      reason: contactAccessRequests.reason,
+      status: contactAccessRequests.status,
+      reviewedBy: contactAccessRequests.reviewedBy,
+      reviewedAt: contactAccessRequests.reviewedAt,
+      createdAt: contactAccessRequests.createdAt,
+      updatedAt: contactAccessRequests.updatedAt,
+      requestedByName: users.name,
+      contactName: contacts.name,
+      companyName: companies.name,
+    })
     .from(contactAccessRequests)
+    .leftJoin(users, eq(contactAccessRequests.requestedBy, users.id))
+    .leftJoin(contacts, eq(contactAccessRequests.contactId, contacts.id))
+    .leftJoin(companies, eq(contacts.companyId, companies.id))
     .orderBy(desc(contactAccessRequests.createdAt))
 
   console.log("[contact-permission.service] Found requests:", result.length)
@@ -121,6 +137,9 @@ export async function getContactAccessRequests(): Promise<ContactAccessRequest[]
     reviewedAt: request.reviewedAt || undefined,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
+    requestedByName: request.requestedByName || undefined,
+    contactName: request.contactName || undefined,
+    companyName: request.companyName || undefined,
   }))
 }
 

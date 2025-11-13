@@ -13,10 +13,10 @@ export function useContactRequests(filters?: RequestFilters) {
   return useQuery({
     queryKey: ["contact-requests", filters],
     queryFn: async () => {
-      const response = await apiClient<{ data: ContactAccessRequest[] }>(
+      const response = await apiClient<ContactAccessRequest[]>(
         "/api/contact-requests"
       )
-      return response.data
+      return response
     },
     staleTime: 1000 * 30,
     select: (data) => {
@@ -35,14 +35,14 @@ export function useApproveContactRequest() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient<{ data: ContactAccessRequest }>(
+      const response = await apiClient<ContactAccessRequest>(
         `/api/contact-requests/${id}`,
         {
           method: "PATCH",
           body: JSON.stringify({ action: "approve" }),
         }
       )
-      return response.data
+      return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-requests"] })
@@ -64,14 +64,14 @@ export function useRejectContactRequest() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient<{ data: ContactAccessRequest }>(
+      const response = await apiClient<ContactAccessRequest>(
         `/api/contact-requests/${id}`,
         {
           method: "PATCH",
           body: JSON.stringify({ action: "reject" }),
         }
       )
-      return response.data
+      return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-requests"] })
@@ -91,10 +91,10 @@ export function usePendingContactRequestsCount() {
   return useQuery({
     queryKey: ["contact-requests"],
     queryFn: async () => {
-      const response = await apiClient<{ data: ContactAccessRequest[] }>(
+      const response = await apiClient<ContactAccessRequest[]>(
         "/api/contact-requests"
       )
-      return response.data
+      return response
     },
     staleTime: 1000 * 30,
     select: (data) => data.filter((request) => request.status === "pending").length,
