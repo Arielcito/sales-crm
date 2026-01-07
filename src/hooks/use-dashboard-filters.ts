@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { DateRange } from "react-day-picker"
-import { startOfYear, endOfDay } from "date-fns"
+import { subYears, endOfDay } from "date-fns"
 import type { Currency } from "@/lib/types"
 
 export interface DashboardFilters {
@@ -15,7 +15,7 @@ export function useDashboardFilters() {
   const defaultDateRange: DateRange = useMemo(() => {
     const now = new Date()
     return {
-      from: startOfYear(now),
+      from: subYears(now, 1),
       to: endOfDay(now),
     }
   }, [])
