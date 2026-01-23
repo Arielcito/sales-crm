@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Company } from "@/lib/types"
 import { apiClient } from "@/lib/api/client"
+import { toast } from "sonner"
 
 interface CreateCompanyPayload {
   name: string
@@ -37,8 +38,22 @@ export function useCreateCompany() {
       })
     },
     onSuccess: async () => {
+      toast.success("Empresa creada exitosamente")
       await queryClient.invalidateQueries({ queryKey: ["companies"] })
       await queryClient.refetchQueries({ queryKey: ["companies"] })
+    },
+    onError: (error: any) => {
+      console.error("[useCreateCompany] Error:", error)
+      const message = error?.message || "Error al crear empresa"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
     },
   })
 }
@@ -67,10 +82,25 @@ export function useUpdateCompany() {
 
       return { previousCompanies }
     },
-    onError: (_error, _variables, context) => {
+    onError: (error: any, _variables, context) => {
+      console.error("[useUpdateCompany] Error:", error)
+      const message = error?.message || "Error al actualizar empresa"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousCompanies) {
         queryClient.setQueryData(["companies"], context.previousCompanies)
       }
+    },
+    onSuccess: () => {
+      toast.success("Empresa actualizada exitosamente")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -99,10 +129,25 @@ export function useDeleteCompany() {
 
       return { previousCompanies }
     },
-    onError: (_error, _id, context) => {
+    onError: (error: any, _id, context) => {
+      console.error("[useDeleteCompany] Error:", error)
+      const message = error?.message || "Error al eliminar empresa"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousCompanies) {
         queryClient.setQueryData(["companies"], context.previousCompanies)
       }
+    },
+    onSuccess: () => {
+      toast.success("Empresa eliminada exitosamente")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })

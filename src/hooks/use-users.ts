@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api/client"
 import type { CreateUserInput, UpdateUserInput } from "@/lib/schemas/user"
 import type { User } from "@/lib/types"
+import { toast } from "sonner"
 
 export function useUsers() {
   return useQuery({
@@ -41,16 +42,32 @@ export function useCreateUser() {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error?.message || "Error al crear usuario")
+        throw result.error
       }
 
       return result.data as User
     },
     onSuccess: () => {
       console.log("[useCreateUser] User created, invalidating queries")
+      toast.success("Usuario creado exitosamente")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
       queryClient.invalidateQueries({ queryKey: ["teams"] })
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
+    onError: (error: any) => {
+      console.error("[useCreateUser] Error:", error)
+      const message = error?.message || "Error al crear usuario"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
     },
   })
 }
@@ -70,7 +87,7 @@ export function useUpdateUser() {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error?.message || "Error al actualizar usuario")
+        throw result.error
       }
 
       return result.data as User
@@ -98,7 +115,19 @@ export function useUpdateUser() {
 
       return { previousUsers, previousVisibleUsers }
     },
-    onError: (_error, _variables, context) => {
+    onError: (error: any, _variables, context) => {
+      console.error("[useUpdateUser] Error:", error)
+      const message = error?.message || "Error al actualizar usuario"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousUsers) {
         queryClient.setQueryData(["users"], context.previousUsers)
       }
@@ -106,12 +135,17 @@ export function useUpdateUser() {
         queryClient.setQueryData(["visible-users"], context.previousVisibleUsers)
       }
     },
+    onSuccess: () => {
+      toast.success("Usuario actualizado exitosamente")
+    },
     onSettled: () => {
       console.log("[useUpdateUser] User updated, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
       queryClient.invalidateQueries({ queryKey: ["current-user"] })
       queryClient.invalidateQueries({ queryKey: ["teams"] })
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
   })
 }
@@ -129,7 +163,7 @@ export function useDeleteUser() {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error?.message || "Error al eliminar usuario")
+        throw result.error
       }
 
       return result.data
@@ -153,7 +187,19 @@ export function useDeleteUser() {
 
       return { previousUsers, previousVisibleUsers }
     },
-    onError: (_error, _id, context) => {
+    onError: (error: any, _id, context) => {
+      console.error("[useDeleteUser] Error:", error)
+      const message = error?.message || "Error al eliminar usuario"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousUsers) {
         queryClient.setQueryData(["users"], context.previousUsers)
       }
@@ -161,11 +207,16 @@ export function useDeleteUser() {
         queryClient.setQueryData(["visible-users"], context.previousVisibleUsers)
       }
     },
+    onSuccess: () => {
+      toast.success("Usuario eliminado exitosamente")
+    },
     onSettled: () => {
       console.log("[useDeleteUser] User deleted, invalidating queries")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
       queryClient.invalidateQueries({ queryKey: ["teams"] })
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
   })
 }
@@ -193,16 +244,32 @@ export function useReassignUser() {
       const result = await response.json()
 
       if (!result.success) {
-        throw new Error(result.error?.message || "Error al reasignar usuario")
+        throw result.error
       }
 
       return result.data as User
     },
     onSuccess: () => {
       console.log("[useReassignUser] User reassigned, invalidating queries")
+      toast.success("Usuario reasignado exitosamente")
       queryClient.invalidateQueries({ queryKey: ["users"] })
       queryClient.invalidateQueries({ queryKey: ["visible-users"] })
       queryClient.invalidateQueries({ queryKey: ["teams"] })
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+      queryClient.invalidateQueries({ queryKey: ["contacts"] })
+    },
+    onError: (error: any) => {
+      console.error("[useReassignUser] Error:", error)
+      const message = error?.message || "Error al reasignar usuario"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
     },
   })
 }

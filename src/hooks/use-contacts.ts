@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Contact } from "@/lib/types"
 import { apiClient } from "@/lib/api/client"
+import { toast } from "sonner"
 
 interface CreateContactPayload {
   name: string
@@ -36,8 +37,22 @@ export function useCreateContact() {
       })
     },
     onSuccess: async () => {
+      toast.success("Contacto creado exitosamente")
       await queryClient.invalidateQueries({ queryKey: ["contacts"] })
       await queryClient.refetchQueries({ queryKey: ["contacts"] })
+    },
+    onError: (error: any) => {
+      console.error("[useCreateContact] Error:", error)
+      const message = error?.message || "Error al crear contacto"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
     },
   })
 }
@@ -66,10 +81,25 @@ export function useUpdateContact() {
 
       return { previousContacts }
     },
-    onError: (_error, _variables, context) => {
+    onError: (error: any, _variables, context) => {
+      console.error("[useUpdateContact] Error:", error)
+      const message = error?.message || "Error al actualizar contacto"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousContacts) {
         queryClient.setQueryData(["contacts"], context.previousContacts)
       }
+    },
+    onSuccess: () => {
+      toast.success("Contacto actualizado exitosamente")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
@@ -98,10 +128,25 @@ export function useDeleteContact() {
 
       return { previousContacts }
     },
-    onError: (_error, _id, context) => {
+    onError: (error: any, _id, context) => {
+      console.error("[useDeleteContact] Error:", error)
+      const message = error?.message || "Error al eliminar contacto"
+      const details = error?.details || []
+
+      if (details.length > 0) {
+        toast.error(message, {
+          description: details.join("\n"),
+        })
+      } else {
+        toast.error(message)
+      }
+
       if (context?.previousContacts) {
         queryClient.setQueryData(["contacts"], context.previousContacts)
       }
+    },
+    onSuccess: () => {
+      toast.success("Contacto eliminado exitosamente")
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] })

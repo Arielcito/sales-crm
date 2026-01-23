@@ -75,9 +75,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
     try {
       await deleteCompanyMutation.mutateAsync(company.id)
       setDeletingCompany(null)
-    } catch (error) {
-      console.error("[CompaniesView] Error deleting company:", error)
-      alert("No se puede eliminar la empresa porque tiene contactos o negociaciones asociadas")
+    } catch {
       setDeletingCompany(null)
     }
   }
@@ -86,9 +84,7 @@ export function CompaniesView({ currentUser }: CompaniesViewProps) {
     try {
       await deleteContactMutation.mutateAsync(contact.id)
       setDeletingContact(null)
-    } catch (error) {
-      console.error("[CompaniesView] Error deleting contact:", error)
-      alert("No se puede eliminar el contacto porque tiene negociaciones asociadas")
+    } catch {
       setDeletingContact(null)
     }
   }
