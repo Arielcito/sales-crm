@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { Contact } from "@/lib/types"
+import type { Contact, ApiError } from "@/lib/types"
 import { apiClient } from "@/lib/api/client"
 import { toast } from "sonner"
 
@@ -41,7 +41,7 @@ export function useCreateContact() {
       await queryClient.invalidateQueries({ queryKey: ["contacts"] })
       await queryClient.refetchQueries({ queryKey: ["contacts"] })
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       console.error("[useCreateContact] Error:", error)
       const message = error?.message || "Error al crear contacto"
       const details = error?.details || []
@@ -81,7 +81,7 @@ export function useUpdateContact() {
 
       return { previousContacts }
     },
-    onError: (error: any, _variables, context) => {
+    onError: (error: ApiError, _variables, context) => {
       console.error("[useUpdateContact] Error:", error)
       const message = error?.message || "Error al actualizar contacto"
       const details = error?.details || []
@@ -128,7 +128,7 @@ export function useDeleteContact() {
 
       return { previousContacts }
     },
-    onError: (error: any, _id, context) => {
+    onError: (error: ApiError, _id, context) => {
       console.error("[useDeleteContact] Error:", error)
       const message = error?.message || "Error al eliminar contacto"
       const details = error?.details || []

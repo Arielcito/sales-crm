@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api/client"
 import type { CreateUserInput, UpdateUserInput } from "@/lib/schemas/user"
-import type { User } from "@/lib/types"
+import type { User, ApiError } from "@/lib/types"
 import { toast } from "sonner"
 
 export function useUsers() {
@@ -56,7 +56,7 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       console.error("[useCreateUser] Error:", error)
       const message = error?.message || "Error al crear usuario"
       const details = error?.details || []
@@ -115,7 +115,7 @@ export function useUpdateUser() {
 
       return { previousUsers, previousVisibleUsers }
     },
-    onError: (error: any, _variables, context) => {
+    onError: (error: ApiError, _variables, context) => {
       console.error("[useUpdateUser] Error:", error)
       const message = error?.message || "Error al actualizar usuario"
       const details = error?.details || []
@@ -187,7 +187,7 @@ export function useDeleteUser() {
 
       return { previousUsers, previousVisibleUsers }
     },
-    onError: (error: any, _id, context) => {
+    onError: (error: ApiError, _id, context) => {
       console.error("[useDeleteUser] Error:", error)
       const message = error?.message || "Error al eliminar usuario"
       const details = error?.details || []
@@ -258,7 +258,7 @@ export function useReassignUser() {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
       queryClient.invalidateQueries({ queryKey: ["contacts"] })
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       console.error("[useReassignUser] Error:", error)
       const message = error?.message || "Error al reasignar usuario"
       const details = error?.details || []

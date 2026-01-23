@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { Company } from "@/lib/types"
+import type { Company, ApiError } from "@/lib/types"
 import { apiClient } from "@/lib/api/client"
 import { toast } from "sonner"
 
@@ -42,7 +42,7 @@ export function useCreateCompany() {
       await queryClient.invalidateQueries({ queryKey: ["companies"] })
       await queryClient.refetchQueries({ queryKey: ["companies"] })
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       console.error("[useCreateCompany] Error:", error)
       const message = error?.message || "Error al crear empresa"
       const details = error?.details || []
@@ -82,7 +82,7 @@ export function useUpdateCompany() {
 
       return { previousCompanies }
     },
-    onError: (error: any, _variables, context) => {
+    onError: (error: ApiError, _variables, context) => {
       console.error("[useUpdateCompany] Error:", error)
       const message = error?.message || "Error al actualizar empresa"
       const details = error?.details || []
@@ -129,7 +129,7 @@ export function useDeleteCompany() {
 
       return { previousCompanies }
     },
-    onError: (error: any, _id, context) => {
+    onError: (error: ApiError, _id, context) => {
       console.error("[useDeleteCompany] Error:", error)
       const message = error?.message || "Error al eliminar empresa"
       const details = error?.details || []

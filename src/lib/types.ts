@@ -204,3 +204,8 @@ export interface DashboardStatsExtended {
     ongoingProjects: TeamStats[]
   }
 }
+
+export interface ApiError {
+  message?: string
+  details?: string[]
+}
