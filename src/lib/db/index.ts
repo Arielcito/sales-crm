@@ -3,18 +3,24 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL!;
+const maxConnections = 1;
 
-const isProduction = process.env.NODE_ENV === "production";
-const maxConnections = isProduction ? 20 : 10;
+declare global {
+  var __dbClient: postgres.Sql | undefined;
+}
 
-console.log(`[DB] Initializing connection pool (env: ${process.env.NODE_ENV || 'development'}, max: ${maxConnections})`);
+function getClient() {
+  if (!global.__dbClient) {
+    console.log(`[DB] Initializing connection pool (env: ${process.env.NODE_ENV || 'development'}, max: ${maxConnections})`);
+    global.__dbClient = postgres(connectionString, {
+      ssl: 'require',
+      max: maxConnections,
+      idle_timeout: 20,
+      max_lifetime: 60 * 30,
+    });
+  }
+  return global.__dbClient;
+}
 
-export const client = postgres(connectionString, {
-  prepare: false,
-  ssl: 'require',
-  max: maxConnections,
-  idle_timeout: 20,
-  max_lifetime: 60 * 30,
-});
-
+export const client = getClient();
 export const db = drizzle(client, { schema });
