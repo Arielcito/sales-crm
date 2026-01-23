@@ -50,37 +50,6 @@ export async function blindCreateContact(
 ): Promise<BlindCreateContactResult> {
   console.log("[contact.service] Blind create contact:", data.name, data.email)
 
-  if (data.email) {
-    console.log("[contact.service] Checking for exact email match:", data.email)
-    const existingByEmail = await db
-      .select()
-      .from(contacts)
-      .where(eq(contacts.email, data.email))
-      .limit(1)
-
-    if (existingByEmail.length > 0) {
-      console.log("[contact.service] Exact email match found:", existingByEmail[0].id)
-      return {
-        status: "linked",
-        contactId: existingByEmail[0].id,
-        contact: {
-          id: existingByEmail[0].id,
-          userId: existingByEmail[0].userId,
-          companyId: existingByEmail[0].companyId || undefined,
-          name: existingByEmail[0].name,
-          email: existingByEmail[0].email || undefined,
-          phone: existingByEmail[0].phone || undefined,
-          position: existingByEmail[0].position || undefined,
-          status: existingByEmail[0].status,
-          notes: existingByEmail[0].notes || undefined,
-          createdAt: existingByEmail[0].createdAt,
-          updatedAt: existingByEmail[0].updatedAt,
-        },
-        message: "Contacto existente vinculado correctamente"
-      }
-    }
-  }
-
   if (data.companyId) {
     console.log("[contact.service] Checking for fuzzy match by name+company")
     const potentialDuplicates = await db

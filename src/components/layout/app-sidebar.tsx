@@ -39,7 +39,7 @@ export function AppSidebar() {
   const pathname = usePathname()
   const { data: currentUser, isLoading } = useCurrentUser()
   const { name: brandName, logoUrl } = useBrandingContext()
-  const { data: pendingCount = 0 } = usePendingRequestsCount()
+  const { data: pendingCount = 0 } = usePendingRequestsCount(currentUser?.level === 1)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const navigationItems: NavigationItem[] = [

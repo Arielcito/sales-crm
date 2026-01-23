@@ -88,7 +88,7 @@ export function useRejectCompanyRequest() {
   })
 }
 
-export function usePendingRequestsCount() {
+export function usePendingRequestsCount(enabled: boolean = true) {
   return useQuery({
     queryKey: ["company-requests"],
     queryFn: async () => {
@@ -99,5 +99,8 @@ export function usePendingRequestsCount() {
     },
     staleTime: 1000 * 30,
     select: (data) => data.filter((request) => request.status === "pending").length,
+    enabled,
+    retry: false,
+    throwOnError: false,
   })
 }

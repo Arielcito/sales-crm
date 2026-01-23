@@ -101,7 +101,7 @@ export const contacts = pgTable("contact", {
     .references(() => users.id, { onDelete: "cascade" }),
   companyId: uuid("companyId").references(() => companies.id, { onDelete: "set null" }),
   name: text("name").notNull(),
-  email: text("email").unique(),
+  email: text("email"),
   phone: varchar("phone", { length: 50 }),
   position: text("position"),
   status: varchar("status", { length: 50 }).notNull().default("lead"),

@@ -64,6 +64,13 @@
       "when": 1763056341665,
       "tag": "0008_living_tempest",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769182562675,
+      "tag": "0009_unknown_blazing_skull",
+      "breakpoints": true
     }
   ]
 }
