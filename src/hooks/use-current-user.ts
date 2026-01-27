@@ -10,8 +10,10 @@ export function useCurrentUser() {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ["current-user", session?.user?.id],
     queryFn: async () => {
-      console.log("[useCurrentUser] Fetching current user data")
-      const response = await fetch(`/api/users/${session?.user?.id}`)
+      console.log("[useCurrentUser] Fetching current user data, session ID:", session?.user?.id)
+      const response = await fetch(`/api/users/${session?.user?.id}`, {
+        credentials: "include",
+      })
       const result = await response.json()
 
       if (!result.success) {
@@ -23,6 +25,8 @@ export function useCurrentUser() {
     enabled: !!session?.user?.id && !sessionPending,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+    retry: 2,
+    retryDelay: 500,
   })
 
   return {

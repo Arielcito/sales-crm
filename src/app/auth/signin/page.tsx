@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,21 +20,36 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      await signIn.email({
-        email,
-        password,
-      });
-      toast.success("Sesión iniciada correctamente");
+    console.log("[SignIn] Intentando login con:", email);
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+    const { data, error } = await signIn.email({
+      email,
+      password,
+      fetchOptions: {
+        onSuccess: async () => {
+          console.log("[SignIn] Login exitoso");
+          toast.success("Sesión iniciada correctamente");
 
-      router.push("/dashboard");
-    } catch (err) {
-      toast.error("Correo electrónico o contraseña inválidos");
-      console.error("[Auth] Error en inicio de sesión:", err);
-    } finally {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          router.push("/dashboard");
+        },
+        onError: (ctx) => {
+          console.error("[SignIn] Error en login:", ctx.error);
+          toast.error(ctx.error.message || "Correo electrónico o contraseña inválidos");
+          setLoading(false);
+        }
+      }
+    });
+
+    if (error) {
+      console.error("[SignIn] Error response:", error);
+      toast.error(error.message || "Correo electrónico o contraseña inválidos");
       setLoading(false);
+      return;
+    }
+
+    if (data) {
+      console.log("[SignIn] Data recibida:", data);
     }
   };
 

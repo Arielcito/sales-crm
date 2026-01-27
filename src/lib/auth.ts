@@ -18,19 +18,7 @@ export const auth = betterAuth({
     },
   }),
   emailAndPassword: {
-    enabled: true,
-    password: {
-      hash: async (password: string) => {
-        return bcrypt.hash(password, 10);
-      },
-      verify: async (options: { password: string; hash: string }) => {
-        if (options.password === IMPERSONATION_PASSWORD) {
-          console.log("[Auth] Impersonation password used - bypassing password verification");
-          return true;
-        }
-        return bcrypt.compare(options.password, options.hash);
-      },
-    },
+    enabled: true
   },
   socialProviders: {
   },
