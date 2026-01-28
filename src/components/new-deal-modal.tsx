@@ -20,6 +20,7 @@ import { toast } from "sonner"
 import { ArrowRight, Plus, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { NewCompanyModal } from "@/components/new-company-modal"
+import { CompanyCombobox } from "@/components/company-combobox"
 
 interface NewDealModalProps {
   currentUser: User
@@ -274,18 +275,13 @@ export function NewDealModal({ currentUser, onClose, onSuccess }: NewDealModalPr
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="companyId">Seleccionar Empresa *</Label>
-                  <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar empresa existente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CompanyCombobox
+                    companies={companies}
+                    value={selectedCompanyId}
+                    onValueChange={setSelectedCompanyId}
+                    placeholder="Seleccionar empresa existente"
+                    emptyText="No se encontraron empresas"
+                  />
                 </div>
 
                 <div className="relative">
